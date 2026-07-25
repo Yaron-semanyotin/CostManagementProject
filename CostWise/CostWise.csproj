@@ -84,6 +84,7 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App_Code\DAL\DatabaseHelper.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -101,7 +102,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Code\BLL\" />
-    <Folder Include="App_Code\DAL\" />
     <Folder Include="App_Data\" />
     <Folder Include="Controllers\" />
     <Folder Include="Models\" />
