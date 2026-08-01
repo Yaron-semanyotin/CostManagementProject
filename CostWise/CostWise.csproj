@@ -80,17 +80,36 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="DatabaseConnectionTest.aspx" />
     <Content Include="Global.asax" />
+    <Content Include="MeasurementUnitTest.aspx" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Code\DAL\DatabaseConnectionTestDAL.cs" />
     <Content Include="App_Code\DAL\DatabaseHelper.cs" />
     <Content Include="App_Code\BLL\DatabaseConnectionTestBLL.cs" />
+    <Content Include="App_Code\BLL\MeasurementUnit.cs" />
+    <Content Include="App_Code\DAL\MeasurementUnitDAL.cs" />
+    <Content Include="App_Code\BLL\MeasurementUnitBLL.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Content Include="DatabaseConnectionTest.aspx.cs">
+      <DependentUpon>DatabaseConnectionTest.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
+    <Content Include="DatabaseConnectionTest.aspx.designer.cs">
+      <DependentUpon>DatabaseConnectionTest.aspx</DependentUpon>
+    </Content>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Content Include="MeasurementUnitTest.aspx.cs">
+      <DependentUpon>MeasurementUnitTest.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
+    <Content Include="MeasurementUnitTest.aspx.designer.cs">
+      <DependentUpon>MeasurementUnitTest.aspx</DependentUpon>
+    </Content>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
