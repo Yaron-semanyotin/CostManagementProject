@@ -84,6 +84,7 @@
     <Content Include="DatabaseConnectionTest.aspx" />
     <Content Include="Global.asax" />
     <Content Include="Login.aspx" />
+    <Content Include="MeasurementUnits.aspx" />
     <Content Include="MeasurementUnitTest.aspx" />
     <Content Include="Register.aspx" />
     <Content Include="Web.config" />
@@ -145,6 +146,13 @@
     </Content>
     <Content Include="Login.aspx.designer.cs">
       <DependentUpon>Login.aspx</DependentUpon>
+    </Content>
+    <Content Include="MeasurementUnits.aspx.cs">
+      <DependentUpon>MeasurementUnits.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
+    <Content Include="MeasurementUnits.aspx.designer.cs">
+      <DependentUpon>MeasurementUnits.aspx</DependentUpon>
     </Content>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

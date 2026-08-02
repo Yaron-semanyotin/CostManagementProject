@@ -10,7 +10,7 @@
     <form id="form1" runat="server">
         <div>
             <asp:Label ID="ResultLabel" runat="server" />
-            <asp:GridView ID ="SystemUnitsGrid" runat="server" AutoGenerateColumns="true" />
+            <asp:GridView ID ="AvailableUnitsGrid" runat="server" AutoGenerateColumns="true" />
         </div>
     </form>
 </body>
