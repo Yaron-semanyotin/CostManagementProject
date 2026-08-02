@@ -80,6 +80,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Dashboard.aspx" />
     <Content Include="DatabaseConnectionTest.aspx" />
     <Content Include="Global.asax" />
     <Content Include="Login.aspx" />
@@ -111,6 +112,8 @@
     <Content Include="App_Code\BLL\RegistrationBLL.cs" />
     <Content Include="App_Code\DAL\RegistrationDAL.cs" />
     <Content Include="App_Code\BLL\PasswordHasher.cs" />
+    <Content Include="App_Code\DAL\AuthenticationDAL.cs" />
+    <Content Include="App_Code\BLL\AuthenticationBLL.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Content Include="DatabaseConnectionTest.aspx.cs">
       <DependentUpon>DatabaseConnectionTest.aspx</DependentUpon>
@@ -118,6 +121,13 @@
     </Content>
     <Content Include="DatabaseConnectionTest.aspx.designer.cs">
       <DependentUpon>DatabaseConnectionTest.aspx</DependentUpon>
+    </Content>
+    <Content Include="Dashboard.aspx.cs">
+      <DependentUpon>Dashboard.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
+    <Content Include="Dashboard.aspx.designer.cs">
+      <DependentUpon>Dashboard.aspx</DependentUpon>
     </Content>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>

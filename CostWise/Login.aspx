@@ -9,6 +9,18 @@
 <body>
     <form id="form1" runat="server">
         <div>
+            <asp:Label ID="UsernameLabel" runat="server" AssociatedControlID="UsernameTextBox" Text="שם משתמש: " />
+            <asp:TextBox ID="UsernameTextBox" runat="server" MaxLength="50" />
+        </div>
+        <div>
+            <asp:Label ID="PasswordLabel" runat="server" AssociatedControlID="PasswordTextBox" Text="סיסמה: " />
+            <asp:TextBox ID="PasswordTextBox" runat="server" TextMode="Password" MaxLength="128" />
+        </div>
+        <div>
+            <asp:Button ID="LoginButton" runat ="server" Text="התחברות" OnClick="LoginButton_Click" />
+        </div>
+        <div>
+            <asp:Label ID="LoginResultLabel" runat="server" />
         </div>
     </form>
 </body>
