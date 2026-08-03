@@ -116,5 +116,26 @@ namespace CostWise.App_Code.BLL
                 throw new InvalidOperationException("לא ניתן לעדכן את יחידת המידה.");
             }
         }
+        public static void DeleteCustomUnit(int userId, int measurementUnitId)
+        {
+            if (userId <= 0)
+            {
+                throw new ArgumentException("זהות המשתמש אינה תקינה.");
+            }
+            if (measurementUnitId <= 0)
+            {
+                throw new ArgumentException("מזהה יחידת המידה אינו תקין.");
+            }
+            bool isInUse = MeasurementUnitDAL.IsCustomUnitInUseForUser(userId, measurementUnitId);
+            if (isInUse)
+            {
+                throw new InvalidOperationException("לא ניתן למחוק יחידת מידה שנמצאת בשימוש.");
+            }
+            bool wasDeleted = MeasurementUnitDAL.DeleteCustomUnit(userId, measurementUnitId);
+            if (!wasDeleted)
+            {
+                throw new InvalidOperationException("לא ניתן למחוק את יחידת המידה.");
+            }
+        }
     }
 }

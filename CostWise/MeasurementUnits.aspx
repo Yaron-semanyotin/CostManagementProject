@@ -46,12 +46,13 @@
             <h2>יחידות מותאמות לעסק</h2>
             <asp:GridView ID="CustomUnitsGrid" runat="server" AutoGenerateColumns="false"
                 EmptyDataText="לא הוגדרו יחידות מותאמות" DataKeyNames="MeasurementUnitId" OnRowEditing="CustomUnitsGrid_RowEditing"
-                OnRowCancelingEdit="CustomUnitsGrid_RowCancelingEdit" OnRowUpdating="CustomUnitsGrid_RowUpdating">
+                OnRowCancelingEdit="CustomUnitsGrid_RowCancelingEdit" OnRowUpdating="CustomUnitsGrid_RowUpdating"
+                OnRowDeleting="CustomUnitsGrid_RowDeleting">
                 <Columns>
                     <asp:BoundField DataField="UnitName" HeaderText="שם היחידה" />
                     <asp:BoundField DataField="UnitFamily" HeaderText="משפחה" />
                     <asp:BoundField DataField="ConversionFactorToBase" HeaderText="מקדם המרה ליחידת בסיס" />
-                    <asp:CommandField ShowEditButton="true" EditText="ערוך" UpdateText="שמור" CancelText="ביטול" />
+                    <asp:CommandField ShowEditButton="true" ShowDeleteButton="true" EditText="ערוך" UpdateText="שמור" CancelText="ביטול" DeleteText="מחק" />
                 </Columns>
             </asp:GridView>
         </div>

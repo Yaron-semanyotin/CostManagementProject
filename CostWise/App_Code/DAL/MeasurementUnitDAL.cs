@@ -218,5 +218,79 @@ namespace CostWise.App_Code.DAL
                 }
             }
         }
+        public static bool IsCustomUnitInUseForUser(int userId, int measurementUnitId)
+        {
+            const string query = @"SELECT CASE WHEN EXISTS
+            (
+                SELECT 1
+                FROM dbo.T_Users AS u
+                INNER JOIN dbo.T_MeasurementUnits AS  mu
+                    ON mu.BusinessId = u.BusinessId
+                WHERE u.UserId = @UserId
+                    AND mu.MeasurementUnitId = @MeasurementUnitId
+                    AND mu.BusinessId IS NOT NULL
+                    AND
+                    (
+                        EXISTS
+                        (
+                            SELECT 1
+                            FROM dbo.T_Ingredients AS i
+                            WHERE i.PackageUnitId = mu.MeasurementUnitId
+                        )
+                        OR EXISTS
+                        (
+                            SELECT 1
+                            FROM dbo.T_RecipeIngredients AS ri
+                            WHERE ri.MeasurementUnitId = mu.MeasurementUnitId
+                        )
+                    )
+            )
+            THEN CAST(1 AS bit)
+            ELSE CAST(0 AS bit)
+            END;";
+            using (SqlConnection connection = DatabaseHelper.GetConnection())
+            {
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                    command.Parameters.Add("@MeasurementUnitId", SqlDbType.Int).Value = measurementUnitId;
+                    connection.Open();
+                    return (bool)command.ExecuteScalar();
+                }
+            }
+        }
+        public static bool DeleteCustomUnit(int userId, int measurementUnitId)
+        {
+            const string query = @"DELETE mu
+            FROM dbo.T_MeasurementUnits AS mu
+            INNER JOIN dbo.T_Users AS u
+                ON u.BusinessId = mu.BusinessId
+            WHERE u.UserId = @UserId
+                AND mu.MeasurementUnitId = @MeasurementUnitId
+                AND mu.BusinessId IS NOT NULL
+                AND NOT EXISTS
+                (
+                    SELECT 1
+                    FROM dbo.T_Ingredients AS i
+                    WHERE i.PackageUnitId = mu.MeasurementUnitId
+                )
+                AND NOT EXISTS
+                (
+                    SELECT 1
+                    FROM dbo.T_RecipeIngredients AS ri
+                    WHERE ri.MeasurementUnitId = mu.MeasurementUnitId
+                );";
+            using (SqlConnection connection = DatabaseHelper.GetConnection())
+            {
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                    command.Parameters.Add("@MeasurementUnitId", SqlDbType.Int).Value = measurementUnitId;
+                    connection.Open();
+                    int affectedRows = command.ExecuteNonQuery();
+                    return affectedRows == 1;
+                }
+            }
+        }
     }
 }

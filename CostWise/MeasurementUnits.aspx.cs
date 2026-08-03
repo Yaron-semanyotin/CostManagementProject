@@ -20,6 +20,11 @@ namespace CostWise
             if (!IsPostBack)
             {
                 LoadUnits();
+                if (Session["MeasurementUnitsMessage"] != null)
+                {
+                    ResultLabel.Text = Session["MeasurementUnitsMessage"].ToString();
+                    Session.Remove("MeasurementUnitsMessage");
+                }
             }
         }
         private void LoadUnits()
@@ -60,13 +65,10 @@ namespace CostWise
             {
                 int userId = (int)Session["UserId"];
                 MeasurementUnitBLL.CreateCustomUnit(userId, unitName, unitFamily, conversionFactorToBase);
-                List<MeasurementUnit> customUnits = MeasurementUnitBLL.GetCustomUnits(userId);
-                CustomUnitsGrid.DataSource = customUnits;
-                CustomUnitsGrid.DataBind();
-                CustomUnitNameTextBox.Text = string.Empty;
-                UnitFamilyDropDownList.SelectedIndex = 0;
-                ConversionFactorTextBox.Text = string.Empty;
-                ResultLabel.Text = "היחידה נוספה בהצלחה.";
+                Session["MeasurementUnitsMessage"] = "היחידה נוספה בהצלחה.";
+                Response.Redirect("~/MeasurementUnits.aspx", false);
+                Context.ApplicationInstance.CompleteRequest();
+                return;
             }
             catch (ArgumentException ex)
             {
@@ -108,11 +110,10 @@ namespace CostWise
             try
             {
                 MeasurementUnitBLL.UpdateCustomUnit(userId, measurementUnitId, unitName, unitFamily, conversionFactorToBase);
-                CustomUnitsGrid.EditIndex = -1;
-                List<MeasurementUnit> customUnits = MeasurementUnitBLL.GetCustomUnits(userId);
-                CustomUnitsGrid.DataSource = customUnits;
-                CustomUnitsGrid.DataBind();
-                ResultLabel.Text = "יחידת המידה עודכנה בהצלחה.";
+                Session["MeasurementUnitsMessage"] = "יחידת המידה עודכנה בהצלחה.";
+                Response.Redirect("~/MeasurementUnits.aspx", false);
+                Context.ApplicationInstance.CompleteRequest();
+                return;
             }
             catch (ArgumentException ex)
             {
@@ -128,6 +129,41 @@ namespace CostWise
             {
                 e.Cancel = true;
                 ResultLabel.Text = "אירעה שגיאה בעת עדכון יחידת המידה.";
+            }
+        }
+        protected void CustomUnitsGrid_RowDeleting(object sender, GridViewDeleteEventArgs e)
+        {
+            int measurementUnitId = (int)CustomUnitsGrid.DataKeys[e.RowIndex].Value;
+            int userId = (int)Session["UserId"];
+            try
+            {
+                MeasurementUnitBLL.DeleteCustomUnit(userId, measurementUnitId);
+                Session["MeasurementUnitsMessage"] = "יחידת המידה נמחקה בהצלחה.";
+                Response.Redirect("~/MeasurementUnits.aspx", false);
+
+                Context.ApplicationInstance.CompleteRequest();
+                return;
+            }
+            catch (ArgumentException ex)
+            {
+                Session["MeasurementUnitsMessage"] = ex.Message;
+                Response.Redirect("~/MeasurementUnits.aspx", false);
+                Context.ApplicationInstance.CompleteRequest();
+                return;
+            }
+            catch (InvalidOperationException ex)
+            {
+                Session["MeasurementUnitsMessage"] = ex.Message;
+                Response.Redirect("~/MeasurementUnits.aspx", false);
+                Context.ApplicationInstance.CompleteRequest();
+                return;
+            }
+            catch (Exception)
+            {
+                Session["MeasurementUnitsMessage"] = "אירעה שגיאה בעת מחיקת יחידת המידה.";
+                Response.Redirect("~/MeasurementUnits.aspx", false);
+                Context.ApplicationInstance.CompleteRequest();
+                return;
             }
         }
     }
