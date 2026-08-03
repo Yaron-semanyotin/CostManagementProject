@@ -125,6 +125,34 @@ namespace CostWise.App_Code.DAL
                 }
             }
         }
+        public static bool UnitNameExistsForUserExceptUnit(int userId, int measurementUnitId, string unitName)
+        {
+            const string query = @"SELECT CASE WHEN EXISTS
+            (
+                SELECT 1
+                FROM dbo.T_Users AS u
+                INNER JOIN dbo.T_MeasurementUnits AS mu
+                    ON mu.BusinessId IS NULL
+                    OR mu.BusinessId = u.BusinessId
+                WHERE u.UserId = @UserId
+                    AND mu.UnitName = @UnitName
+                    AND mu.MeasurementUnitId <> @MeasurementUnitId
+            )
+            THEN CAST(1 AS bit)
+            ELSE CAST(0 AS bit)
+            END;";
+            using (SqlConnection connection = DatabaseHelper.GetConnection())
+            {
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                    command.Parameters.Add("@MeasurementUnitId", SqlDbType.Int).Value = measurementUnitId;
+                    command.Parameters.Add("@UnitName", SqlDbType.NVarChar, 50).Value = unitName;
+                    connection.Open();
+                    return (bool)command.ExecuteScalar();
+                }
+            }
+        }
         public static bool CreateCustomUnit(int userId, string unitName, string unitFamily, decimal conversionFactorToBase)
         {
             const string query = @"INSERT INTO dbo.T_MeasurementUnits
@@ -146,6 +174,38 @@ namespace CostWise.App_Code.DAL
                 using (SqlCommand command = new SqlCommand(query, connection))
                 {
                     command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                    command.Parameters.Add("@UnitName", SqlDbType.NVarChar, 50).Value = unitName;
+                    command.Parameters.Add("@UnitFamily", SqlDbType.NVarChar, 20).Value = unitFamily;
+                    SqlParameter conversionFactorParameter = command.Parameters.Add("@ConversionFactorToBase", SqlDbType.Decimal);
+                    conversionFactorParameter.Precision = 18;
+                    conversionFactorParameter.Scale = 6;
+                    conversionFactorParameter.Value = conversionFactorToBase;
+                    connection.Open();
+                    int affectedRows = command.ExecuteNonQuery();
+                    return affectedRows == 1;
+                }
+            }
+        }
+        public static bool UpdateCustomUnit(int userId, int measurementUnitId, string unitName, string unitFamily, decimal conversionFactorToBase)
+        {
+            const string query = @"UPDATE mu
+            SET
+                mu.UnitName = @UnitName,
+                mu.UnitFamily = @UnitFamily,
+                mu.ConversionFactorToBase = @ConversionFactorToBase,
+                mu.UpdatedAtUtc = SYSUTCDATETIME()
+            FROM dbo.T_MeasurementUnits AS mu
+            INNER JOIN dbo.T_Users AS u
+                ON u.BusinessId = mu.BusinessId
+            WHERE u.UserId = @UserId
+            AND mu.MeasurementUnitId = @MeasurementUnitId
+            AND mu.BusinessId IS NOT NULL;";
+            using (SqlConnection connection = DatabaseHelper.GetConnection())
+            {
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                    command.Parameters.Add("@MeasurementUnitId", SqlDbType.Int).Value = measurementUnitId;
                     command.Parameters.Add("@UnitName", SqlDbType.NVarChar, 50).Value = unitName;
                     command.Parameters.Add("@UnitFamily", SqlDbType.NVarChar, 20).Value = unitFamily;
                     SqlParameter conversionFactorParameter = command.Parameters.Add("@ConversionFactorToBase", SqlDbType.Decimal);

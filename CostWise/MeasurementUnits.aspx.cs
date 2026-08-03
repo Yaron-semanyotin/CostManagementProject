@@ -81,5 +81,54 @@ namespace CostWise
                 ResultLabel.Text = "אירעה שגיאה בעת הוספת יחידת המידה.";
             }
         }
+        protected void CustomUnitsGrid_RowEditing(object sender, GridViewEditEventArgs e)
+        {
+            CustomUnitsGrid.EditIndex = e.NewEditIndex;
+            LoadUnits();
+        }
+        protected void CustomUnitsGrid_RowCancelingEdit(object sender, GridViewCancelEditEventArgs e)
+        {
+            CustomUnitsGrid.EditIndex = -1;
+            LoadUnits();
+        }
+        protected void CustomUnitsGrid_RowUpdating(object sender, GridViewUpdateEventArgs e)
+        {
+            int measurementUnitId = (int)CustomUnitsGrid.DataKeys[e.RowIndex].Value;
+            string unitName = e.NewValues["UnitName"]?.ToString();
+            string unitFamily = e.NewValues["UnitFamily"]?.ToString();
+            string conversionFactorText = e.NewValues["ConversionFactorToBase"]?.ToString();
+            decimal conversionFactorToBase;
+            if (!decimal.TryParse(conversionFactorText, out conversionFactorToBase))
+            {
+                e.Cancel = true;
+                ResultLabel.Text = "יש להזין מקדם המרה מספרי.";
+                return;
+            }
+            int userId = (int)Session["UserId"];
+            try
+            {
+                MeasurementUnitBLL.UpdateCustomUnit(userId, measurementUnitId, unitName, unitFamily, conversionFactorToBase);
+                CustomUnitsGrid.EditIndex = -1;
+                List<MeasurementUnit> customUnits = MeasurementUnitBLL.GetCustomUnits(userId);
+                CustomUnitsGrid.DataSource = customUnits;
+                CustomUnitsGrid.DataBind();
+                ResultLabel.Text = "יחידת המידה עודכנה בהצלחה.";
+            }
+            catch (ArgumentException ex)
+            {
+                e.Cancel = true;
+                ResultLabel.Text = ex.Message;
+            }
+            catch (InvalidOperationException ex)
+            {
+                e.Cancel = true;
+                ResultLabel.Text = ex.Message;
+            }
+            catch (Exception)
+            {
+                e.Cancel = true;
+                ResultLabel.Text = "אירעה שגיאה בעת עדכון יחידת המידה.";
+            }
+        }
     }
 }
