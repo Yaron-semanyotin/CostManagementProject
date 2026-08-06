@@ -14,6 +14,11 @@ namespace CostWise.App_Code.BLL
             }
             return IngredientDAL.GetIngredientsForUser(userId);
         }
+        public static List<Ingredient> GetActiveIngredientsForUser(int userId)
+        {
+            List<Ingredient> ingredients = GetIngredientsForUser(userId);
+            return ingredients.FindAll(ingredient => ingredient.IsActive);
+        }
         public static void CreateIngredient(int userId, string ingredientName, decimal packagePrice, decimal packageQuantity, int packageUnitId)
         {
             if (userId <= 0)

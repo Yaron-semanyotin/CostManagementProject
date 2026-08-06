@@ -13,6 +13,11 @@ namespace CostWise.App_Code.BLL
             }
             return ProductDAL.GetProductsForUser(userId);
         }
+        public static List<Product> GetActiveProductsForUser(int userId)
+        {
+            List<Product> products = GetProductsForUser(userId);
+            return products.FindAll(product => product.IsActive);
+        }
         public static void CreateProduct(int userId, string productName, decimal yieldQuantity, int yieldUnitId)
         {
             if (userId <= 0)

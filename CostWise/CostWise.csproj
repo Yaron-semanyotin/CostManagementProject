@@ -87,11 +87,19 @@
     <Content Include="Login.aspx" />
     <Content Include="MeasurementUnits.aspx" />
     <Content Include="MeasurementUnitTest.aspx" />
+    <Content Include="Recipe.aspx" />
     <Content Include="Register.aspx" />
     <Content Include="Web.config" />
     <Content Include="Products.aspx" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Recipe.aspx.cs">
+      <DependentUpon>Recipe.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
+    <Content Include="Recipe.aspx.designer.cs">
+      <DependentUpon>Recipe.aspx</DependentUpon>
+    </Content>
     <Content Include="Products.aspx.cs">
       <DependentUpon>Products.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -129,6 +137,7 @@
     <Content Include="App_Code\DAL\ProductDAL.cs" />
     <Content Include="App_Code\BLL\ProductBLL.cs" />
     <Content Include="App_Code\DAL\RecipeIngredientDAL.cs" />
+    <Content Include="App_Code\BLL\RecipeIngredientBLL.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Content Include="DatabaseConnectionTest.aspx.cs">
       <DependentUpon>DatabaseConnectionTest.aspx</DependentUpon>
@@ -175,6 +184,7 @@
     <Content Include="Ingredients.aspx.designer.cs">
       <DependentUpon>Ingredients.aspx</DependentUpon>
     </Content>
+    <Compile Include="Models\RecipeIngredientDisplayDto.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -189,7 +199,6 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Controllers\" />
-    <Folder Include="Models\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
