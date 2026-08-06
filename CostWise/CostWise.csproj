@@ -83,13 +83,22 @@
     <Content Include="Dashboard.aspx" />
     <Content Include="DatabaseConnectionTest.aspx" />
     <Content Include="Global.asax" />
+    <Content Include="Ingredients.aspx" />
     <Content Include="Login.aspx" />
     <Content Include="MeasurementUnits.aspx" />
     <Content Include="MeasurementUnitTest.aspx" />
     <Content Include="Register.aspx" />
     <Content Include="Web.config" />
+    <Content Include="Products.aspx" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Products.aspx.cs">
+      <DependentUpon>Products.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
+    <Content Include="Products.aspx.designer.cs">
+      <DependentUpon>Products.aspx</DependentUpon>
+    </Content>
     <Content Include="Register.aspx.cs">
       <DependentUpon>Register.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -115,6 +124,11 @@
     <Content Include="App_Code\BLL\PasswordHasher.cs" />
     <Content Include="App_Code\DAL\AuthenticationDAL.cs" />
     <Content Include="App_Code\BLL\AuthenticationBLL.cs" />
+    <Content Include="App_Code\DAL\IngredientDAL.cs" />
+    <Content Include="App_Code\BLL\IngredientBLL.cs" />
+    <Content Include="App_Code\DAL\ProductDAL.cs" />
+    <Content Include="App_Code\BLL\ProductBLL.cs" />
+    <Content Include="App_Code\DAL\RecipeIngredientDAL.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Content Include="DatabaseConnectionTest.aspx.cs">
       <DependentUpon>DatabaseConnectionTest.aspx</DependentUpon>
@@ -153,6 +167,13 @@
     </Content>
     <Content Include="MeasurementUnits.aspx.designer.cs">
       <DependentUpon>MeasurementUnits.aspx</DependentUpon>
+    </Content>
+    <Content Include="Ingredients.aspx.cs">
+      <DependentUpon>Ingredients.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
+    <Content Include="Ingredients.aspx.designer.cs">
+      <DependentUpon>Ingredients.aspx</DependentUpon>
     </Content>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
