@@ -80,6 +80,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="CalculationDetails.aspx" />
+    <Content Include="CalculationHistory.aspx" />
     <Content Include="Dashboard.aspx" />
     <Content Include="DatabaseConnectionTest.aspx" />
     <Content Include="Global.asax" />
@@ -138,6 +140,10 @@
     <Content Include="App_Code\BLL\ProductBLL.cs" />
     <Content Include="App_Code\DAL\RecipeIngredientDAL.cs" />
     <Content Include="App_Code\BLL\RecipeIngredientBLL.cs" />
+    <Content Include="App_Code\BLL\UnitConversionBLL.cs" />
+    <Content Include="App_Code\BLL\CostCalculationBLL.cs" />
+    <Content Include="App_Code\BLL\CostCalculationResult.cs" />
+    <Content Include="App_Code\DAL\CostCalculationDAL.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Content Include="DatabaseConnectionTest.aspx.cs">
       <DependentUpon>DatabaseConnectionTest.aspx</DependentUpon>
@@ -152,6 +158,20 @@
     </Content>
     <Content Include="Dashboard.aspx.designer.cs">
       <DependentUpon>Dashboard.aspx</DependentUpon>
+    </Content>
+    <Content Include="CalculationHistory.aspx.cs">
+      <DependentUpon>CalculationHistory.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
+    <Content Include="CalculationHistory.aspx.designer.cs">
+      <DependentUpon>CalculationHistory.aspx</DependentUpon>
+    </Content>
+    <Content Include="CalculationDetails.aspx.cs">
+      <DependentUpon>CalculationDetails.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
+    <Content Include="CalculationDetails.aspx.designer.cs">
+      <DependentUpon>CalculationDetails.aspx</DependentUpon>
     </Content>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
