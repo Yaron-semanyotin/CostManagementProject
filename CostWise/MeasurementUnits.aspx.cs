@@ -166,5 +166,52 @@ namespace CostWise
                 return;
             }
         }
+        protected string GetUnitFamilyDisplayName(object unitFamilyValue)
+        {
+            string unitFamily = unitFamilyValue?.ToString();
+            switch (unitFamily)
+            {
+                case "Weight":
+                    return "משקל";
+
+                case "Volume":
+                    return "נפח";
+
+                case "Quantity":
+                    return "כמות";
+
+                default:
+                    return "לא ידוע";
+            }
+        }
+        protected string GetSystemUnitDisplayQuantity(object unitNameValue)
+        {
+            string unitName = unitNameValue?.ToString()?.Trim();
+            switch (unitName)
+            {
+                case "גרם":
+                case "Gram":
+                    return "1.00";
+
+                case "מיליליטר":
+                case "Milliliter":
+                    return "1.00";
+
+                case "קילוגרם":
+                case "Kilogram":
+                    return "1";
+
+                case "ליטר":
+                case "Liter":
+                    return "1";
+
+                case "יחידה":
+                case "Unit":
+                    return "1";
+
+                default:
+                    return "—";
+            }
+        }
     }
 }
