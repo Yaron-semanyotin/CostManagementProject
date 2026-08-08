@@ -1,16 +1,17 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Dashboard.aspx.cs" Inherits="CostWise.Dashboard" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="Dashboard.aspx.cs" Inherits="CostWise.Dashboard" MasterPageFile="~/Site.Master" Title="לוח בקרה" %>
 
-<!DOCTYPE html>
+<asp:Content ID="DashboardMainContent" ContentPlaceHolderID="MainContent" runat="server">
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-<head runat="server">
-    <title></title>
-</head>
-<body>
-    <form id="form1" runat="server">
-        <div>
-            <asp:Button ID="LogoutButton" runat="server" Text="יציאה" OnClick="LogoutButton_Click" />
+    <section aria-labelledby="DashboardHeading">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 id="DashboardHeading" class="h4 card-title">סקירת המערכת</h2>
+
+                <p class="card-text text-secondary mb-0">
+                    מכאן תוכל לעבור לניהול יחידות מידה, רכיבים, מוצרים וחישובי עלויות.
+                </p>
+            </div>
         </div>
-    </form>
-</body>
-</html>
+    </section>
+
+</asp:Content>

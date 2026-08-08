@@ -80,6 +80,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="BusinessProfile.aspx" />
     <Content Include="CalculationDetails.aspx" />
     <Content Include="CalculationHistory.aspx" />
     <Content Include="Dashboard.aspx" />
@@ -95,6 +96,13 @@
     <Content Include="Products.aspx" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Site.Master.cs">
+      <DependentUpon>Site.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
+    <Content Include="Site.Master.designer.cs">
+      <DependentUpon>Site.Master</DependentUpon>
+    </Content>
     <Content Include="Recipe.aspx.cs">
       <DependentUpon>Recipe.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -144,6 +152,8 @@
     <Content Include="App_Code\BLL\CostCalculationBLL.cs" />
     <Content Include="App_Code\BLL\CostCalculationResult.cs" />
     <Content Include="App_Code\DAL\CostCalculationDAL.cs" />
+    <Content Include="App_Code\DAL\BusinessDAL.cs" />
+    <Content Include="App_Code\BLL\BusinessBLL.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Content Include="DatabaseConnectionTest.aspx.cs">
       <DependentUpon>DatabaseConnectionTest.aspx</DependentUpon>
@@ -172,6 +182,13 @@
     </Content>
     <Content Include="CalculationDetails.aspx.designer.cs">
       <DependentUpon>CalculationDetails.aspx</DependentUpon>
+    </Content>
+    <Content Include="BusinessProfile.aspx.cs">
+      <DependentUpon>BusinessProfile.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
+    <Content Include="BusinessProfile.aspx.designer.cs">
+      <DependentUpon>BusinessProfile.aspx</DependentUpon>
     </Content>
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -209,6 +226,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <Content Include="Site.Master" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
