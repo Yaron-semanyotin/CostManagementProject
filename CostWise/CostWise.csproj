@@ -155,6 +155,7 @@
     <Content Include="App_Code\DAL\CostCalculationDAL.cs" />
     <Content Include="App_Code\DAL\BusinessDAL.cs" />
     <Content Include="App_Code\BLL\BusinessBLL.cs" />
+    <Content Include="App_Code\BLL\RecipeIngredientInput.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Content Include="DatabaseConnectionTest.aspx.cs">
       <DependentUpon>DatabaseConnectionTest.aspx</DependentUpon>

@@ -2,7 +2,7 @@
 using System.Data;
 using System.Data.SqlClient;
 using CostWise.App_Code.BLL;
-
+using System;
 namespace CostWise.App_Code.DAL
 {
     public static class ProductDAL
@@ -58,7 +58,7 @@ namespace CostWise.App_Code.DAL
             }
             return products;
         }
-        public static bool CreateProduct(int userId, string productName, decimal yieldQuantity, string yieldUnitLabel)
+        public static int CreateProduct(int userId, string productName, decimal yieldQuantity, string yieldUnitLabel)
         {
             const string query = @"INSERT INTO dbo.T_Products
             (
@@ -67,6 +67,7 @@ namespace CostWise.App_Code.DAL
                 YieldQuantity,
                 YieldUnitLabel
             )
+            OUTPUT INSERTED.ProductId
             SELECT
                 u.BusinessId,
                 @ProductName,
@@ -87,8 +88,119 @@ namespace CostWise.App_Code.DAL
                     yieldQuantityParameter.Value = yieldQuantity;
                     command.Parameters.Add("@YieldUnitLabel", SqlDbType.NVarChar, 50).Value = yieldUnitLabel;
                     connection.Open();
-                    int affectedRows = command.ExecuteNonQuery();
-                    return affectedRows == 1;
+                    object result = command.ExecuteScalar();
+                    if (result == null || result == DBNull.Value)
+                    {
+                        return 0;
+                    }
+                    return Convert.ToInt32(result);
+                }
+            }
+        }
+        public static int CreateProductWithRecipe(int userId, string productName, decimal yieldQuantity, string yieldUnitLabel, List<RecipeIngredientInput> recipeIngredients)
+        {
+            const string productQuery = @"INSERT INTO dbo.T_Products
+            (
+                BusinessId,
+                ProductName,
+                YieldQuantity,
+                YieldUnitLabel
+            )
+            OUTPUT INSERTED.ProductId
+            SELECT
+                u.BusinessId,
+                @ProductName,
+                @YieldQuantity,
+                @YieldUnitLabel
+            FROM dbo.T_Users AS u
+            WHERE u.UserId = @UserId;";
+            const string recipeIngredientQuery =
+                @"INSERT INTO dbo.T_RecipeIngredients
+                (
+                    ProductId,
+                    IngredientId,
+                    Quantity,
+                    MeasurementUnitId,
+                    SortOrder
+                )
+                SELECT
+                    p.ProductId,
+                    i.IngredientId,
+                    @Quantity,
+                    mu.MeasurementUnitId,
+                    @SortOrder
+                FROM dbo.T_Users AS u
+                INNER JOIN dbo.T_Products AS p
+                    ON p.BusinessId = u.BusinessId
+                    AND p.ProductId = @ProductId
+                INNER JOIN dbo.T_Ingredients AS i
+                    ON i.BusinessId = u.BusinessId
+                    AND i.IngredientId = @IngredientId
+                INNER JOIN dbo.T_MeasurementUnits AS mu
+                    ON mu.MeasurementUnitId = @MeasurementUnitId
+                    AND
+                    (
+                        mu.BusinessId IS NULL
+                        OR mu.BusinessId = u.BusinessId
+                    )
+                WHERE u.UserId = @UserId
+                    AND p.IsActive = 1
+                    AND i.IsActive = 1;";
+            using (SqlConnection connection = DatabaseHelper.GetConnection())
+            {
+                connection.Open();
+                using (SqlTransaction transaction = connection.BeginTransaction())
+                {
+                    try
+                    {
+                        object productIdResult;
+                        using (SqlCommand productCommand = new SqlCommand(productQuery, connection, transaction))
+                        {
+                            productCommand.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                            productCommand.Parameters.Add("@ProductName", SqlDbType.NVarChar, 150).Value = productName;
+                            SqlParameter yieldQuantityParameter = productCommand.Parameters.Add("@YieldQuantity", SqlDbType.Decimal);
+                            yieldQuantityParameter.Precision = 18;
+                            yieldQuantityParameter.Scale = 6;
+                            yieldQuantityParameter.Value = yieldQuantity;
+                            productCommand.Parameters.Add("@YieldUnitLabel", SqlDbType.NVarChar, 50).Value = yieldUnitLabel;
+                            productIdResult = productCommand.ExecuteScalar();
+                        }
+                        if (productIdResult == null || productIdResult == DBNull.Value)
+                        {
+                            transaction.Rollback();
+                            return 0;
+                        }
+                        int productId = Convert.ToInt32(productIdResult);
+                        for (int index = 0; index < recipeIngredients.Count; index++)
+                        {
+                            RecipeIngredientInput recipeIngredient = recipeIngredients[index];
+                            using (SqlCommand recipeCommand = new SqlCommand(recipeIngredientQuery, connection, transaction))
+                            {
+                                recipeCommand.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                                recipeCommand.Parameters.Add("@ProductId", SqlDbType.Int).Value = productId;
+                                recipeCommand.Parameters.Add("@IngredientId", SqlDbType.Int).Value = recipeIngredient.IngredientId;
+                                SqlParameter quantityParameter = recipeCommand.Parameters.Add("@Quantity", SqlDbType.Decimal);
+                                quantityParameter.Precision = 18;
+                                quantityParameter.Scale = 6;
+                                quantityParameter.Value = recipeIngredient.Quantity;
+                                recipeCommand.Parameters.Add("@MeasurementUnitId", SqlDbType.Int).Value = recipeIngredient.MeasurementUnitId;
+                                recipeCommand.Parameters.Add("@SortOrder", SqlDbType.Int).Value = index + 1;
+                                int affectedRows = recipeCommand.ExecuteNonQuery();
+                                if (affectedRows != 1)
+                                {
+                                    transaction.Rollback();
+                                    return 0;
+                                }
+                            }
+                        }
+                        transaction.Commit();
+                        return productId;
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
                 }
             }
         }

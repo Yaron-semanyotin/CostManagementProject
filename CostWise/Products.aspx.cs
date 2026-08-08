@@ -87,9 +87,9 @@ namespace CostWise
             try
             {
                 int userId = (int)Session["UserId"];
-                ProductBLL.CreateProduct(userId, productName, yieldQuantity, yieldUnitId);
-                Session["ProductsMessage"] = "המוצר נוסף בהצלחה.";
-                Response.Redirect("~/Products.aspx", false);
+                int createdProductId = ProductBLL.CreateProduct(userId, productName, yieldQuantity, yieldUnitId);
+                Session["RecipeMessage"] = "המוצר נוסף בהצלחה. כעת ניתן להוסיף רכיבים למתכון.";
+                Response.Redirect("~/Recipe.aspx?productId=" + createdProductId, false);
                 Context.ApplicationInstance.CompleteRequest();
                 return;
             }
