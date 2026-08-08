@@ -55,10 +55,43 @@
                             </li>
 
                             <li class="nav-item">
-                                <a
-                                    class='<%= GetNavigationLinkCssClass("~/Ingredients.aspx") %>'
-                                    href='<%: ResolveUrl("~/Ingredients.aspx") %>'>רכיבים
-                                </a>
+                                <button
+                                    type="button"
+                                    class='<%= IsIngredientsSectionCurrent()
+            ? "nav-link rounded px-3 py-2 w-100 border-0 d-flex align-items-center justify-content-between text-start active fw-semibold"
+            : "nav-link rounded px-3 py-2 w-100 border-0 bg-transparent d-flex align-items-center justify-content-between text-start text-dark" %>'
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#ingredientsSubmenu"
+                                    aria-expanded='<%= IsIngredientsSectionCurrent()
+            ? "true"
+            : "false" %>'
+                                    aria-controls="ingredientsSubmenu">
+
+                                    <span>רכיבים</span>
+
+                                    <span aria-hidden="true">▾
+                                    </span>
+                                </button>
+
+                                <div
+                                    id="ingredientsSubmenu"
+                                    class='<%= IsIngredientsSectionCurrent()? "collapse show": "collapse" %>'>
+                                    <ul class="nav flex-column gap-1 mt-1 me-3">
+                                        <li class="nav-item">
+                                            <a
+                                                class='<%= GetNavigationLinkCssClass("~/Ingredients.aspx") %>'
+                                                href='<%: ResolveUrl("~/Ingredients.aspx") %>'>רשימת רכיבים
+                                            </a>
+                                        </li>
+
+                                        <li class="nav-item">
+                                            <a
+                                                class='<%= GetNavigationLinkCssClass("~/IngredientRecycleBin.aspx") %>'
+                                                href='<%: ResolveUrl("~/IngredientRecycleBin.aspx") %>'>סל מחזור רכיבים
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
                             </li>
 
                             <li class="nav-item">

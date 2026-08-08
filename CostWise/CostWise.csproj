@@ -86,6 +86,7 @@
     <Content Include="Dashboard.aspx" />
     <Content Include="DatabaseConnectionTest.aspx" />
     <Content Include="Global.asax" />
+    <Content Include="IngredientRecycleBin.aspx" />
     <Content Include="Ingredients.aspx" />
     <Content Include="Login.aspx" />
     <Content Include="MeasurementUnits.aspx" />
@@ -220,6 +221,13 @@
     </Content>
     <Content Include="Ingredients.aspx.designer.cs">
       <DependentUpon>Ingredients.aspx</DependentUpon>
+    </Content>
+    <Content Include="IngredientRecycleBin.aspx.cs">
+      <DependentUpon>IngredientRecycleBin.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
+    <Content Include="IngredientRecycleBin.aspx.designer.cs">
+      <DependentUpon>IngredientRecycleBin.aspx</DependentUpon>
     </Content>
     <Compile Include="Models\RecipeIngredientDisplayDto.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

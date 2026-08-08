@@ -19,6 +19,12 @@ namespace CostWise.App_Code.BLL
             List<Ingredient> ingredients = GetIngredientsForUser(userId);
             return ingredients.FindAll(ingredient => ingredient.IsActive);
         }
+        public static List<Ingredient> GetInactiveIngredientsForUser(int userId)
+        {
+            List<Ingredient> ingredients = GetIngredientsForUser(userId);
+
+            return ingredients.FindAll(ingredient => !ingredient.IsActive);
+        }
         public static void CreateIngredient(int userId, string ingredientName, decimal packagePrice, decimal packageQuantity, int packageUnitId)
         {
             if (userId <= 0)
@@ -147,7 +153,7 @@ namespace CostWise.App_Code.BLL
                 throw new InvalidOperationException("לא ניתן לעדכן את הרכיב.");
             }
         }
-        public static void DeactivateIngredient(int userId, int ingredientId)
+        public static string DeactivateIngredient(int userId, int ingredientId)
         {
             if (userId <= 0)
             {
@@ -157,11 +163,31 @@ namespace CostWise.App_Code.BLL
             {
                 throw new ArgumentException("מזהה הרכיב אינו תקין.");
             }
-            bool wasDeactivated = IngredientDAL.DeactivateIngredient(userId, ingredientId);
-            if (!wasDeactivated)
+            string deactivatedIngredientName = IngredientDAL.DeactivateIngredient(userId, ingredientId);
+            if (string.IsNullOrEmpty(deactivatedIngredientName))
             {
-                throw new InvalidOperationException("לא ניתן להשבית את הרכיב.");
+                throw new InvalidOperationException("לא ניתן להעביר את הרכיב לסל המחזור.");
             }
+            return deactivatedIngredientName;
+        }
+        public static void RestoreIngredient(int userId, int ingredientId)
+        {
+            if (userId <= 0)
+            {
+                throw new ArgumentException("זהות המשתמש אינה תקינה.");
+            }
+            if (ingredientId <= 0)
+            {
+                throw new ArgumentException("מזהה הרכיב אינו תקין.");
+            }
+            List<Ingredient> inactiveIngredients = GetInactiveIngredientsForUser(userId);
+            Ingredient ingredientToRestore = inactiveIngredients.Find(ingredient => ingredient.IngredientId == ingredientId);
+            if (ingredientToRestore == null)
+            {
+                throw new InvalidOperationException("לא ניתן לשחזר את הרכיב.");
+            }
+            ReactivateIngredient(userId, ingredientToRestore.IngredientId, ingredientToRestore.IngredientName, ingredientToRestore.PackagePrice, ingredientToRestore.PackageQuantity, ingredientToRestore.PackageUnitId
+            );
         }
         public static void ReactivateIngredient(int userId, int ingredientId, string ingredientName, decimal packagePrice, decimal packageQuantity, int packageUnitId)
         {

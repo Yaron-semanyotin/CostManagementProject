@@ -53,6 +53,14 @@ namespace CostWise
             }
             return baseCssClass + " text-dark";
         }
+        protected bool IsIngredientsSectionCurrent()
+        {
+            string currentPagePath = Request.AppRelativeCurrentExecutionFilePath;
+            return
+                string.Equals(currentPagePath, "~/Ingredients.aspx", StringComparison.OrdinalIgnoreCase)
+                ||
+                string.Equals(currentPagePath, "~/IngredientRecycleBin.aspx", StringComparison.OrdinalIgnoreCase);
+        }
         private void RedirectToLogin()
         {
             Session.Clear();

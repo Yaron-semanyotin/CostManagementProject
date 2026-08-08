@@ -163,12 +163,13 @@ namespace CostWise.App_Code.DAL
                 }
             }
         }
-        public static bool DeactivateIngredient(int userId, int ingredientId)
+        public static string DeactivateIngredient(int userId, int ingredientId)
         {
             const string query = @"UPDATE i
             SET
                 i.IsActive = 0,
                 i.UpdatedAtUtc = SYSUTCDATETIME()
+            OUTPUT INSERTED.IngredientName
             FROM dbo.T_Ingredients AS i
             INNER JOIN dbo.T_Users AS u
                 ON u.BusinessId = i.BusinessId
@@ -182,8 +183,12 @@ namespace CostWise.App_Code.DAL
                     command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
                     command.Parameters.Add("@IngredientId", SqlDbType.Int).Value = ingredientId;
                     connection.Open();
-                    int affectedRows = command.ExecuteNonQuery();
-                    return affectedRows == 1;
+                    object deactivatedIngredientName = command.ExecuteScalar();
+                    if (deactivatedIngredientName == null)
+                    {
+                        return null;
+                    }
+                    return Convert.ToString(deactivatedIngredientName);
                 }
             }
         }

@@ -33,7 +33,7 @@ namespace CostWise
             try
             {
                 int userId = (int)Session["UserId"];
-                List<Ingredient> ingredients = IngredientBLL.GetIngredientsForUser(userId);
+                List<Ingredient> ingredients = IngredientBLL.GetActiveIngredientsForUser(userId);
                 List<MeasurementUnit> availableUnits = MeasurementUnitBLL.GetAvailableUnits(userId);
                 var ingredientRows = ingredients.Select(ingredient =>
                     {
@@ -45,8 +45,7 @@ namespace CostWise
                             ingredient.PackagePrice,
                             ingredient.PackageQuantity,
                             ingredient.PackageUnitId,
-                            PackageUnitName = packageUnit == null ? "יחידה לא זמינה" : packageUnit.UnitName,
-                            ingredient.IsActive
+                            PackageUnitName = packageUnit == null ? "יחידה לא זמינה" : packageUnit.UnitName
                         };
                     }).ToList();
                 IngredientsGrid.DataSource = ingredientRows;
@@ -143,7 +142,6 @@ namespace CostWise
         {
             ResultLabel.Text = string.Empty;
             int ingredientId = Convert.ToInt32(IngredientsGrid.DataKeys[e.RowIndex].Values["IngredientId"]);
-            bool isActive = Convert.ToBoolean(IngredientsGrid.DataKeys[e.RowIndex].Values["IsActive"]);
             string ingredientName = e.NewValues["IngredientName"]?.ToString();
             decimal packagePrice;
             if (!decimal.TryParse(e.NewValues["PackagePrice"]?.ToString(), out packagePrice))
@@ -177,16 +175,8 @@ namespace CostWise
             try
             {
                 int userId = (int)Session["UserId"];
-                if (isActive)
-                {
-                    IngredientBLL.UpdateIngredient(userId, ingredientId, ingredientName, packagePrice, packageQuantity, packageUnitId);
-                    Session["IngredientsMessage"] = "הרכיב עודכן בהצלחה.";
-                }
-                else
-                {
-                    IngredientBLL.ReactivateIngredient(userId, ingredientId, ingredientName, packagePrice, packageQuantity, packageUnitId);
-                    Session["IngredientsMessage"] = "הרכיב הופעל מחדש בהצלחה.";
-                }
+                IngredientBLL.UpdateIngredient(userId, ingredientId, ingredientName, packagePrice, packageQuantity, packageUnitId);
+                Session["IngredientsMessage"] = "הרכיב עודכן בהצלחה.";
                 Response.Redirect("~/Ingredients.aspx", false);
                 Context.ApplicationInstance.CompleteRequest();
                 return;
@@ -204,7 +194,7 @@ namespace CostWise
             catch (Exception)
             {
                 e.Cancel = true;
-                ResultLabel.Text = isActive ? "אירעה שגיאה בעת עדכון הרכיב." : "אירעה שגיאה בעת הפעלה מחדש של הרכיב.";
+                ResultLabel.Text = "אירעה שגיאה בעת עדכון הרכיב.";
             }
         }
         protected void IngredientsGrid_RowDataBound(object sender, GridViewRowEventArgs e)
@@ -213,30 +203,7 @@ namespace CostWise
             {
                 return;
             }
-            bool isActive = Convert.ToBoolean(DataBinder.Eval(e.Row.DataItem, "IsActive"));
             bool isEditRow = (e.Row.RowState & DataControlRowState.Edit) != 0;
-            if (!isActive && !isEditRow)
-            {
-                TableCell commandCell = e.Row.Cells[e.Row.Cells.Count - 1];
-                foreach (Control control in commandCell.Controls)
-                {
-                    LinkButton actionButton = control as LinkButton;
-                    if (actionButton == null)
-                    {
-                        continue;
-                    }
-                    if (string.Equals(actionButton.CommandName, "Edit", StringComparison.OrdinalIgnoreCase))
-                    {
-                        actionButton.Text = "הפעל מחדש";
-                        actionButton.Visible = true;
-                    }
-                    else if (string.Equals(actionButton.CommandName, "Delete", StringComparison.OrdinalIgnoreCase))
-                    {
-                        actionButton.Visible = false;
-                    }
-                }
-                return;
-            }
             if (!isEditRow)
             {
                 return;
@@ -265,8 +232,9 @@ namespace CostWise
             int userId = (int)Session["UserId"];
             try
             {
-                IngredientBLL.DeactivateIngredient(userId, ingredientId);
-                Session["IngredientsMessage"] = "הרכיב הושבת בהצלחה.";
+                string deactivatedIngredientName = IngredientBLL.DeactivateIngredient(userId, ingredientId);
+                string safeIngredientName = Server.HtmlEncode(deactivatedIngredientName);
+                Session["IngredientsMessage"] = "\"" + safeIngredientName + "\" הועבר לסל המחזור וניתן להחזירו בכל עת.";
                 Response.Redirect("~/Ingredients.aspx", false);
                 Context.ApplicationInstance.CompleteRequest();
                 return;
@@ -287,7 +255,7 @@ namespace CostWise
             }
             catch (Exception)
             {
-                Session["IngredientsMessage"] = "אירעה שגיאה בעת השבתת הרכיב.";
+                Session["IngredientsMessage"] = "אירעה שגיאה בעת העברת הרכיב לסל המחזור.";
                 Response.Redirect("~/Ingredients.aspx", false);
                 Context.ApplicationInstance.CompleteRequest();
                 return;
