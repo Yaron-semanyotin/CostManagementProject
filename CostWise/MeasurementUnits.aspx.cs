@@ -65,6 +65,7 @@ namespace CostWise
             {
                 int userId = (int)Session["UserId"];
                 MeasurementUnitBLL.CreateCustomUnit(userId, unitName, unitFamily, conversionFactorToBase);
+                Session["InvalidateProductBuilderDataCache"] = true;
                 Session["MeasurementUnitsMessage"] = "היחידה נוספה בהצלחה.";
                 Response.Redirect("~/MeasurementUnits.aspx", false);
                 Context.ApplicationInstance.CompleteRequest();
@@ -110,6 +111,7 @@ namespace CostWise
             try
             {
                 MeasurementUnitBLL.UpdateCustomUnit(userId, measurementUnitId, unitName, unitFamily, conversionFactorToBase);
+                Session["InvalidateProductBuilderDataCache"] = true;
                 Session["MeasurementUnitsMessage"] = "יחידת המידה עודכנה בהצלחה.";
                 Response.Redirect("~/MeasurementUnits.aspx", false);
                 Context.ApplicationInstance.CompleteRequest();
@@ -138,9 +140,9 @@ namespace CostWise
             try
             {
                 MeasurementUnitBLL.DeleteCustomUnit(userId, measurementUnitId);
+                Session["InvalidateProductBuilderDataCache"] = true;
                 Session["MeasurementUnitsMessage"] = "יחידת המידה נמחקה בהצלחה.";
                 Response.Redirect("~/MeasurementUnits.aspx", false);
-
                 Context.ApplicationInstance.CompleteRequest();
                 return;
             }

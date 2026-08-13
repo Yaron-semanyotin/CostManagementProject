@@ -32,7 +32,8 @@
                         <h1 class="h5 mb-0 text-white"><%: Page.Title %></h1>
                     </div>
                 </div>
-                <asp:Button ID="LogoutButton" runat="server" Text="יציאה" CssClass="btn btn-outline-light" CausesValidation="false" OnClick="LogoutButton_Click" />
+                <asp:Button ID="LogoutButton" runat="server" Text="יציאה"
+                    CssClass="btn btn-outline-light" CausesValidation="false" UseSubmitBehavior="false" OnClick="LogoutButton_Click" />
             </div>
         </header>
         <div class="container-fluid">
@@ -60,12 +61,8 @@
                                     class='<%= IsIngredientsSectionCurrent()
             ? "nav-link rounded px-3 py-2 w-100 border-0 d-flex align-items-center justify-content-between text-start active fw-semibold"
             : "nav-link rounded px-3 py-2 w-100 border-0 bg-transparent d-flex align-items-center justify-content-between text-start text-dark" %>'
-                                    data-bs-toggle="collapse"
-                                    data-bs-target="#ingredientsSubmenu"
-                                    aria-expanded='<%= IsIngredientsSectionCurrent()
-            ? "true"
-            : "false" %>'
-                                    aria-controls="ingredientsSubmenu">
+                                    data-bs-toggle="collapse" data-bs-target="#ingredientsSubmenu"
+                                    aria-expanded='<%= IsIngredientsSectionCurrent()? "true": "false" %>' aria-controls="ingredientsSubmenu">
 
                                     <span>רכיבים</span>
 
@@ -95,10 +92,37 @@
                             </li>
 
                             <li class="nav-item">
-                                <a
-                                    class='<%= GetNavigationLinkCssClass("~/Products.aspx") %>'
-                                    href='<%: ResolveUrl("~/Products.aspx") %>'>מוצרים
-                                </a>
+                                <button type="button" class='<%= IsProductsSectionCurrent()
+            ? "nav-link rounded px-3 py-2 w-100 border-0 d-flex align-items-center justify-content-between text-start active fw-semibold"
+            : "nav-link rounded px-3 py-2 w-100 border-0 bg-transparent d-flex align-items-center justify-content-between text-start text-dark" %>'
+                                    data-bs-toggle="collapse" data-bs-target="#productsSubmenu"
+                                    aria-expanded='<%= IsProductsSectionCurrent()? "true": "false" %>' aria-controls="productsSubmenu">
+
+                                    <span>מוצרים</span>
+
+                                    <span aria-hidden="true">▾</span>
+                                </button>
+
+                                <div
+                                    id="productsSubmenu"
+                                    class='<%= IsProductsSectionCurrent()? "collapse show": "collapse" %>'>
+
+                                    <ul class="nav flex-column gap-1 mt-1 me-3">
+                                        <li class="nav-item">
+                                            <a
+                                                class='<%= GetNavigationLinkCssClass("~/Products.aspx") %>'
+                                                href='<%: ResolveUrl("~/Products.aspx") %>'>רשימת מוצרים
+                                            </a>
+                                        </li>
+
+                                        <li class="nav-item">
+                                            <a
+                                                class='<%= GetNavigationLinkCssClass("~/ProductRecycleBin.aspx") %>'
+                                                href='<%: ResolveUrl("~/ProductRecycleBin.aspx") %>'>סל מחזור מוצרים
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
                             </li>
 
                             <li class="nav-item">

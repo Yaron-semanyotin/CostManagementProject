@@ -20,6 +20,7 @@
         public decimal RecipeQuantityInBaseUnitSnapshot { get; set; }
         public decimal PricePerBaseUnitSnapshot { get; set; }
         public decimal IngredientCostSnapshot { get; set; }
+        public decimal? ManualIngredientCostOverrideSnapshot { get; set; }
         public int SortOrderSnapshot { get; set; }
     }
 }

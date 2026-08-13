@@ -16,6 +16,7 @@ namespace CostWise.App_Code.DAL
                 ri.IngredientId,
                 ri.Quantity,
                 ri.MeasurementUnitId,
+                ri.ManualIngredientCostOverride,
                 ri.SortOrder
             FROM dbo.T_Users AS u
             INNER JOIN dbo.T_Products AS p
@@ -45,6 +46,8 @@ namespace CostWise.App_Code.DAL
                             recipeIngredient.IngredientId = reader.GetInt32(reader.GetOrdinal("IngredientId"));
                             recipeIngredient.Quantity = reader.GetDecimal(reader.GetOrdinal("Quantity"));
                             recipeIngredient.MeasurementUnitId = reader.GetInt32(reader.GetOrdinal("MeasurementUnitId"));
+                            int manualCostOrdinal = reader.GetOrdinal("ManualIngredientCostOverride");
+                            recipeIngredient.ManualIngredientCostOverride = reader.IsDBNull(manualCostOrdinal) ? (decimal?)null : reader.GetDecimal(manualCostOrdinal);
                             recipeIngredient.SortOrder = reader.GetInt32(reader.GetOrdinal("SortOrder"));
                             recipeIngredients.Add(recipeIngredient);
                         }
@@ -53,7 +56,7 @@ namespace CostWise.App_Code.DAL
             }
             return recipeIngredients;
         }
-        public static bool CreateRecipeIngredient(int userId, int productId, int ingredientId, decimal quantity, int measurementUnitId, int sortOrder)
+        public static bool CreateRecipeIngredient(int userId, int productId, int ingredientId, decimal quantity, int measurementUnitId, int sortOrder, decimal? manualIngredientCostOverride = null)
         {
             const string query = @"INSERT INTO dbo.T_RecipeIngredients
             (
@@ -61,6 +64,7 @@ namespace CostWise.App_Code.DAL
                 IngredientId,
                 Quantity,
                 MeasurementUnitId,
+                ManualIngredientCostOverride,
                 SortOrder
             )
             SELECT
@@ -68,6 +72,7 @@ namespace CostWise.App_Code.DAL
                 i.IngredientId,
                 @Quantity,
                 mu.MeasurementUnitId,
+                @ManualIngredientCostOverride,
                 @SortOrder
             FROM dbo.T_Users AS u
             INNER JOIN dbo.T_Products AS p
@@ -98,6 +103,10 @@ namespace CostWise.App_Code.DAL
                     quantityParameter.Scale = 6;
                     quantityParameter.Value = quantity;
                     command.Parameters.Add("@MeasurementUnitId", SqlDbType.Int).Value = measurementUnitId;
+                    SqlParameter manualCostParameter = command.Parameters.Add("@ManualIngredientCostOverride", SqlDbType.Decimal);
+                    manualCostParameter.Precision = 28;
+                    manualCostParameter.Scale = 12;
+                    manualCostParameter.Value = manualIngredientCostOverride.HasValue ? (object)manualIngredientCostOverride.Value : System.DBNull.Value;
                     command.Parameters.Add("@SortOrder", SqlDbType.Int).Value = sortOrder;
                     connection.Open();
                     int affectedRows = command.ExecuteNonQuery();
@@ -105,13 +114,14 @@ namespace CostWise.App_Code.DAL
                 }
             }
         }
-        public static bool UpdateRecipeIngredient(int userId, int productId, int recipeIngredientId, int ingredientId, decimal quantity, int measurementUnitId, int sortOrder)
+        public static bool UpdateRecipeIngredient(int userId, int productId, int recipeIngredientId, int ingredientId, decimal quantity, int measurementUnitId, int sortOrder, decimal? manualIngredientCostOverride = null)
         {
             const string query = @"UPDATE ri
             SET
                 ri.IngredientId = i.IngredientId,
                 ri.Quantity = @Quantity,
                 ri.MeasurementUnitId = mu.MeasurementUnitId,
+                ri.ManualIngredientCostOverride = @ManualIngredientCostOverride,
                 ri.SortOrder = @SortOrder
             FROM dbo.T_RecipeIngredients AS ri
             INNER JOIN dbo.T_Products AS p
@@ -146,6 +156,10 @@ namespace CostWise.App_Code.DAL
                     quantityParameter.Scale = 6;
                     quantityParameter.Value = quantity;
                     command.Parameters.Add("@MeasurementUnitId", SqlDbType.Int).Value = measurementUnitId;
+                    SqlParameter manualCostParameter = command.Parameters.Add("@ManualIngredientCostOverride", SqlDbType.Decimal);
+                    manualCostParameter.Precision = 28;
+                    manualCostParameter.Scale = 12;
+                    manualCostParameter.Value = manualIngredientCostOverride.HasValue ? (object)manualIngredientCostOverride.Value : System.DBNull.Value;
                     command.Parameters.Add("@SortOrder", SqlDbType.Int).Value = sortOrder;
                     connection.Open();
                     int affectedRows = command.ExecuteNonQuery();

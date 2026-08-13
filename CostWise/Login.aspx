@@ -6,7 +6,7 @@
 <head runat="server">
     <title></title>
 </head>
-<body>
+<body data-clear-product-builder-cache="true">
     <form id="form1" runat="server">
         <div>
             <asp:Label ID="UsernameLabel" runat="server" AssociatedControlID="UsernameTextBox" Text="שם משתמש: " />
@@ -23,5 +23,6 @@
             <asp:Label ID="LoginResultLabel" runat="server" />
         </div>
     </form>
+    <script src="<%: ResolveUrl("~/Scripts/product-builder.js") %>"></script>
 </body>
 </html>

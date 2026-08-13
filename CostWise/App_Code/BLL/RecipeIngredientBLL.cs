@@ -48,7 +48,7 @@ namespace CostWise.App_Code.BLL
             }
             return availableUnits.FindAll(unit => string.Equals(unit.UnitFamily, packageUnit.UnitFamily, StringComparison.OrdinalIgnoreCase));
         }
-        public static void CreateRecipeIngredient(int userId, int productId, int ingredientId, decimal quantity, int measurementUnitId)
+        public static void CreateRecipeIngredient(int userId, int productId, int ingredientId, decimal quantity, int measurementUnitId, decimal? manualIngredientCostOverride = null)
         {
             if (userId <= 0)
             {
@@ -65,6 +65,22 @@ namespace CostWise.App_Code.BLL
             if (quantity <= 0)
             {
                 throw new ArgumentException("הכמות במתכון חייבת להיות גדולה מאפס.");
+            }
+            if (manualIngredientCostOverride.HasValue)
+            {
+                decimal manualIngredientCost = manualIngredientCostOverride.Value;
+                if (manualIngredientCost < 0)
+                {
+                    throw new ArgumentException("מחיר הרכיב במתכון אינו יכול להיות שלילי.");
+                }
+                if (manualIngredientCost > 9999999999999999.999999999999m)
+                {
+                    throw new ArgumentException("מחיר הרכיב במתכון גדול מדי.");
+                }
+                if (decimal.Round(manualIngredientCost, 12) != manualIngredientCost)
+                {
+                    throw new ArgumentException("מחיר הרכיב במתכון יכול להכיל עד 12 ספרות אחרי הנקודה.");
+                }
             }
             if (quantity > 999999999999.999999m)
             {
@@ -114,13 +130,13 @@ namespace CostWise.App_Code.BLL
                     sortOrder = existingRecipeIngredient.SortOrder + 1;
                 }
             }
-            bool created = RecipeIngredientDAL.CreateRecipeIngredient(userId, productId, ingredientId, quantity, measurementUnitId, sortOrder);
+            bool created = RecipeIngredientDAL.CreateRecipeIngredient(userId, productId, ingredientId, quantity, measurementUnitId, sortOrder, manualIngredientCostOverride);
             if (!created)
             {
                 throw new InvalidOperationException("לא ניתן היה להוסיף את הרכיב למתכון.");
             }
         }
-        public static void UpdateRecipeIngredient(int userId, int productId, int recipeIngredientId, int ingredientId, decimal quantity, int measurementUnitId)
+        public static void UpdateRecipeIngredient(int userId, int productId, int recipeIngredientId, int ingredientId, decimal quantity, int measurementUnitId, decimal? manualIngredientCostOverride = null)
         {
             if (userId <= 0)
             {
@@ -141,6 +157,22 @@ namespace CostWise.App_Code.BLL
             if (quantity <= 0)
             {
                 throw new ArgumentException("הכמות במתכון חייבת להיות גדולה מאפס.");
+            }
+            if (manualIngredientCostOverride.HasValue)
+            {
+                decimal manualIngredientCost = manualIngredientCostOverride.Value;
+                if (manualIngredientCost < 0)
+                {
+                    throw new ArgumentException("מחיר הרכיב במתכון אינו יכול להיות שלילי.");
+                }
+                if (manualIngredientCost > 9999999999999999.999999999999m)
+                {
+                    throw new ArgumentException("מחיר הרכיב במתכון גדול מדי.");
+                }
+                if (decimal.Round(manualIngredientCost, 12) != manualIngredientCost)
+                {
+                    throw new ArgumentException("מחיר הרכיב במתכון יכול להכיל עד 12 ספרות אחרי הנקודה.");
+                }
             }
             if (quantity > 999999999999.999999m)
             {
@@ -187,7 +219,7 @@ namespace CostWise.App_Code.BLL
             {
                 throw new ArgumentException("יחידת המידה במתכון אינה תואמת למשפחת יחידת האריזה של הרכיב.");
             }
-            bool updated = RecipeIngredientDAL.UpdateRecipeIngredient(userId, productId, recipeIngredientId, ingredientId, quantity, measurementUnitId, existingRecipeIngredient.SortOrder);
+            bool updated = RecipeIngredientDAL.UpdateRecipeIngredient(userId, productId, recipeIngredientId, ingredientId, quantity, measurementUnitId, existingRecipeIngredient.SortOrder, manualIngredientCostOverride);
             if (!updated)
             {
                 throw new InvalidOperationException("לא ניתן היה לעדכן את שורת המתכון.");

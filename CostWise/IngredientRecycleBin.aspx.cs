@@ -77,6 +77,7 @@ namespace CostWise
             try
             {
                 IngredientBLL.RestoreIngredient(userId, ingredientId);
+                Session["InvalidateProductBuilderDataCache"] = true;
                 Session["IngredientRecycleBinMessage"] = "הרכיב הוחזר לרשימת הרכיבים.";
             }
             catch (ArgumentException ex)

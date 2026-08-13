@@ -121,6 +121,7 @@ namespace CostWise.App_Code.DAL
                     IngredientId,
                     Quantity,
                     MeasurementUnitId,
+                    ManualIngredientCostOverride,
                     SortOrder
                 )
                 SELECT
@@ -128,6 +129,7 @@ namespace CostWise.App_Code.DAL
                     i.IngredientId,
                     @Quantity,
                     mu.MeasurementUnitId,
+                    @ManualIngredientCostOverride,
                     @SortOrder
                 FROM dbo.T_Users AS u
                 INNER JOIN dbo.T_Products AS p
@@ -184,6 +186,10 @@ namespace CostWise.App_Code.DAL
                                 quantityParameter.Scale = 6;
                                 quantityParameter.Value = recipeIngredient.Quantity;
                                 recipeCommand.Parameters.Add("@MeasurementUnitId", SqlDbType.Int).Value = recipeIngredient.MeasurementUnitId;
+                                SqlParameter manualCostParameter = recipeCommand.Parameters.Add("@ManualIngredientCostOverride", SqlDbType.Decimal);
+                                manualCostParameter.Precision = 28;
+                                manualCostParameter.Scale = 12;
+                                manualCostParameter.Value = recipeIngredient.ManualIngredientCostOverride.HasValue ? (object)recipeIngredient.ManualIngredientCostOverride.Value : DBNull.Value;
                                 recipeCommand.Parameters.Add("@SortOrder", SqlDbType.Int).Value = index + 1;
                                 int affectedRows = recipeCommand.ExecuteNonQuery();
                                 if (affectedRows != 1)
@@ -204,9 +210,10 @@ namespace CostWise.App_Code.DAL
                 }
             }
         }
-        public static bool UpdateProduct(int userId, int productId, string productName, decimal yieldQuantity, string yieldUnitLabel)
+        public static bool UpdateProductWithRecipe(int userId, int productId, string productName, decimal yieldQuantity, string yieldUnitLabel, List<RecipeIngredientInput> recipeIngredients)
         {
-            const string query = @"UPDATE p
+            const string updateProductQuery = @"
+            UPDATE p
             SET
                 p.ProductName = @ProductName,
                 p.YieldQuantity = @YieldQuantity,
@@ -218,21 +225,115 @@ namespace CostWise.App_Code.DAL
             WHERE u.UserId = @UserId
                 AND p.ProductId = @ProductId
                 AND p.IsActive = 1;";
+            const string deleteRecipeQuery = @"
+            DELETE ri
+            FROM dbo.T_RecipeIngredients AS ri
+            INNER JOIN dbo.T_Products AS p
+                ON p.ProductId = ri.ProductId
+            INNER JOIN dbo.T_Users AS u
+                ON u.BusinessId = p.BusinessId
+            WHERE u.UserId = @UserId
+                AND p.ProductId = @ProductId
+                AND p.IsActive = 1;";
+            const string insertRecipeIngredientQuery = @"
+            INSERT INTO dbo.T_RecipeIngredients
+            (
+                ProductId,
+                IngredientId,
+                Quantity,
+                MeasurementUnitId,
+                ManualIngredientCostOverride,
+                SortOrder
+            )
+            SELECT
+                p.ProductId,
+                i.IngredientId,
+                @Quantity,
+                mu.MeasurementUnitId,
+                @ManualIngredientCostOverride,
+                @SortOrder
+            FROM dbo.T_Users AS u
+            INNER JOIN dbo.T_Products AS p
+                ON p.BusinessId = u.BusinessId
+                AND p.ProductId = @ProductId
+            INNER JOIN dbo.T_Ingredients AS i
+                ON i.BusinessId = u.BusinessId
+                AND i.IngredientId = @IngredientId
+            INNER JOIN dbo.T_MeasurementUnits AS mu
+                ON mu.MeasurementUnitId = @MeasurementUnitId
+                AND
+                (
+                    mu.BusinessId IS NULL
+                    OR mu.BusinessId = u.BusinessId
+                )
+            WHERE u.UserId = @UserId
+                AND p.IsActive = 1;";
             using (SqlConnection connection = DatabaseHelper.GetConnection())
             {
-                using (SqlCommand command = new SqlCommand(query, connection))
+                connection.Open();
+                using (SqlTransaction transaction = connection.BeginTransaction())
                 {
-                    command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
-                    command.Parameters.Add("@ProductId", SqlDbType.Int).Value = productId;
-                    command.Parameters.Add("@ProductName", SqlDbType.NVarChar, 150).Value = productName;
-                    SqlParameter yieldQuantityParameter = command.Parameters.Add("@YieldQuantity", SqlDbType.Decimal);
-                    yieldQuantityParameter.Precision = 18;
-                    yieldQuantityParameter.Scale = 6;
-                    yieldQuantityParameter.Value = yieldQuantity;
-                    command.Parameters.Add("@YieldUnitLabel", SqlDbType.NVarChar, 50).Value = yieldUnitLabel;
-                    connection.Open();
-                    int affectedRows = command.ExecuteNonQuery();
-                    return affectedRows == 1;
+                    try
+                    {
+                        int updatedProductRows;
+                        using (SqlCommand productCommand = new SqlCommand(updateProductQuery, connection, transaction))
+                        {
+                            productCommand.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                            productCommand.Parameters.Add("@ProductId", SqlDbType.Int).Value = productId;
+                            productCommand.Parameters.Add("@ProductName", SqlDbType.NVarChar, 150).Value = productName;
+                            SqlParameter yieldQuantityParameter = productCommand.Parameters.Add("@YieldQuantity", SqlDbType.Decimal);
+                            yieldQuantityParameter.Precision = 18;
+                            yieldQuantityParameter.Scale = 6;
+                            yieldQuantityParameter.Value = yieldQuantity;
+                            productCommand.Parameters.Add("@YieldUnitLabel", SqlDbType.NVarChar, 50).Value = yieldUnitLabel;
+                            updatedProductRows = productCommand.ExecuteNonQuery();
+                        }
+                        if (updatedProductRows != 1)
+                        {
+                            transaction.Rollback();
+                            return false;
+                        }
+                        using (SqlCommand deleteRecipeCommand = new SqlCommand(deleteRecipeQuery, connection, transaction))
+                        {
+                            deleteRecipeCommand.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                            deleteRecipeCommand.Parameters.Add("@ProductId", SqlDbType.Int).Value = productId;
+                            deleteRecipeCommand.ExecuteNonQuery();
+                        }
+                        for (int index = 0; index < recipeIngredients.Count; index++)
+                        {
+                            RecipeIngredientInput recipeIngredient = recipeIngredients[index];
+                            using (SqlCommand recipeCommand = new SqlCommand(insertRecipeIngredientQuery, connection, transaction))
+                            {
+                                recipeCommand.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                                recipeCommand.Parameters.Add("@ProductId", SqlDbType.Int).Value = productId;
+                                recipeCommand.Parameters.Add("@IngredientId", SqlDbType.Int).Value = recipeIngredient.IngredientId;
+                                SqlParameter quantityParameter = recipeCommand.Parameters.Add("@Quantity", SqlDbType.Decimal);
+                                quantityParameter.Precision = 18;
+                                quantityParameter.Scale = 6;
+                                quantityParameter.Value = recipeIngredient.Quantity;
+                                recipeCommand.Parameters.Add("@MeasurementUnitId", SqlDbType.Int).Value = recipeIngredient.MeasurementUnitId;
+                                SqlParameter manualCostParameter = recipeCommand.Parameters.Add("@ManualIngredientCostOverride", SqlDbType.Decimal);
+                                manualCostParameter.Precision = 28;
+                                manualCostParameter.Scale = 12;
+                                manualCostParameter.Value = recipeIngredient.ManualIngredientCostOverride.HasValue
+                                    ? (object)recipeIngredient.ManualIngredientCostOverride.Value : DBNull.Value;
+                                recipeCommand.Parameters.Add("@SortOrder", SqlDbType.Int).Value = index + 1;
+                                int insertedRows = recipeCommand.ExecuteNonQuery();
+                                if (insertedRows != 1)
+                                {
+                                    transaction.Rollback();
+                                    return false;
+                                }
+                            }
+                        }
+                        transaction.Commit();
+                        return true;
+                    }
+                    catch
+                    {
+                        transaction.Rollback();
+                        throw;
+                    }
                 }
             }
         }

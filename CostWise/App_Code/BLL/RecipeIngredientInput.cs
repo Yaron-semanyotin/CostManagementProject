@@ -12,5 +12,6 @@ namespace CostWise.App_Code.BLL
         public decimal Quantity { get; set; }
 
         public int MeasurementUnitId { get; set; }
+        public decimal? ManualIngredientCostOverride { get; set; }
     }
 }

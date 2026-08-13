@@ -2,14 +2,54 @@
 using CostWise.App_Code.DAL;
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
 using System.Web.UI;
 using System.Web.UI.WebControls;
+using System.Web.Script.Serialization;
+
 namespace CostWise
 {
     public partial class Products : System.Web.UI.Page
     {
+        protected bool ShouldClearProductBuilderDataCache { get; private set; }
+        private int SelectedRecipeProductId
+        {
+            get
+            {
+                object storedProductId = ViewState["SelectedRecipeProductId"];
+                if (storedProductId == null)
+                {
+                    return 0;
+                }
+                return Convert.ToInt32(storedProductId);
+            }
+            set
+            {
+                ViewState["SelectedRecipeProductId"] = value;
+            }
+        }
+        protected int EditingProductId
+        {
+            get
+            {
+                object storedProductId = ViewState["EditingProductId"];
+                if (storedProductId == null)
+                {
+                    return 0;
+                }
+                return Convert.ToInt32(storedProductId);
+            }
+            set
+            {
+                ViewState["EditingProductId"] = value;
+            }
+        }
+        private void UpdateProductFormMode()
+        {
+            bool isEditingProduct = EditingProductId > 0;
+            ProductFormTitleLiteral.Text = isEditingProduct ? "עריכת מוצר" : "הוספת מוצר";
+            AddProductButton.Text = isEditingProduct ? "שמור שינויים" : "צור מוצר";
+            CancelProductEditButton.Visible = isEditingProduct;
+        }
         protected void Page_Load(object sender, EventArgs e)
         {
             if (Session["UserId"] == null || Session["BusinessId"] == null || Session["UserName"] == null)
@@ -21,21 +61,25 @@ namespace CostWise
             {
                 LoadProducts();
                 LoadAvailableUnits();
+                ShouldClearProductBuilderDataCache = string.Equals(Convert.ToString(Session["InvalidateProductBuilderDataCache"]), bool.TrueString, StringComparison.OrdinalIgnoreCase);
+                Session.Remove("InvalidateProductBuilderDataCache");
                 if (Session["ProductsMessage"] != null)
                 {
                     ResultLabel.Text = Session["ProductsMessage"].ToString();
                     Session.Remove("ProductsMessage");
                 }
             }
+            UpdateProductFormMode();
         }
         private void LoadProducts()
         {
             try
             {
                 int userId = (int)Session["UserId"];
-                List<Product> products = ProductBLL.GetProductsForUser(userId);
+                List<Product> products = CostCalculationBLL.GetActiveProductsWithCurrentCosts(userId);
                 ProductsGrid.DataSource = products;
                 ProductsGrid.DataBind();
+                UpdateRecipeSelectionState();
                 ResultLabel.Text = string.Empty;
             }
             catch (ArgumentException ex)
@@ -46,6 +90,38 @@ namespace CostWise
             {
                 ResultLabel.Text = "אירעה שגיאה בעת טעינת המוצרים.";
             }
+        }
+        private void UpdateRecipeSelectionState()
+        {
+            foreach (GridViewRow row in ProductsGrid.Rows)
+            {
+                LinkButton openRecipeButton = row.FindControl("OpenRecipeButton") as LinkButton;
+                if (openRecipeButton == null)
+                {
+                    continue;
+                }
+                int rowProductId;
+                bool isSelected = int.TryParse(openRecipeButton.CommandArgument, out rowProductId) && rowProductId == SelectedRecipeProductId;
+                openRecipeButton.Attributes["aria-expanded"] = isSelected ? "true" : "false";
+                row.Attributes["data-recipe-selected"] = isSelected ? "true" : "false";
+            }
+        }
+        private void LoadProductRecipeDetails(int userId, int productId)
+        {
+            CostCalculationResult result = CostCalculationBLL.CalculateProductCost(userId, productId);
+            if (result == null || result.Calculation == null || result.Items == null)
+            {
+                throw new InvalidOperationException("לא ניתן להציג את פרטי המתכון.");
+            }
+            CostCalculation calculation = result.Calculation;
+            RecipeProductNameLabel.Text = Server.HtmlEncode(calculation.ProductNameSnapshot);
+            RecipeYieldQuantityLabel.Text = calculation.YieldQuantitySnapshot.ToString("0.######");
+            RecipeYieldUnitLabel.Text = Server.HtmlEncode(calculation.YieldUnitLabelSnapshot);
+            RecipeTotalCostLabel.Text = calculation.TotalIngredientCostSnapshot.ToString("N2") + " ₪";
+            RecipeCostPerYieldUnitLabel.Text = calculation.CostPerYieldUnitSnapshot.ToString("N2") + " ₪";
+            ProductRecipeItemsGrid.DataSource = result.Items;
+            ProductRecipeItemsGrid.DataBind();
+            ProductRecipeDetailsPanel.Visible = true;
         }
         private void LoadAvailableUnits()
         {
@@ -68,6 +144,41 @@ namespace CostWise
                 ResultLabel.Text = "אירעה שגיאה בעת טעינת יחידות המידה.";
             }
         }
+        private void LoadProductForEditing(int userId, int productId)
+        {
+            Product product = ProductBLL.GetActiveProductForUser(userId, productId);
+            ProductNameTextBox.Text = product.ProductName;
+            YieldQuantityTextBox.Text = product.YieldQuantity.ToString("0.######");
+            ListItem yieldUnitItem = YieldUnitDropDownList.Items.FindByText(product.YieldUnitLabel);
+            if (yieldUnitItem == null)
+            {
+                throw new InvalidOperationException("יחידת התוצר של המוצר אינה זמינה לעריכה.");
+            }
+            YieldUnitDropDownList.ClearSelection();
+            yieldUnitItem.Selected = true;
+        }
+        private void LoadRecipeForEditing(int userId, int productId)
+        {
+            List<RecipeIngredient> recipeIngredients = RecipeIngredientBLL.GetRecipeIngredientsForProduct(userId, productId);
+            if (recipeIngredients == null || recipeIngredients.Count == 0)
+            {
+                throw new InvalidOperationException("לא ניתן לערוך מוצר שאין לו מתכון.");
+            }
+            List<RecipeIngredientInput> recipeInputs = new List<RecipeIngredientInput>();
+            foreach (RecipeIngredient recipeIngredient in recipeIngredients)
+            {
+                RecipeIngredientInput recipeInput = new RecipeIngredientInput
+                {
+                    IngredientId = recipeIngredient.IngredientId,
+                    Quantity = recipeIngredient.Quantity,
+                    MeasurementUnitId = recipeIngredient.MeasurementUnitId,
+                    ManualIngredientCostOverride = recipeIngredient.ManualIngredientCostOverride
+                };
+                recipeInputs.Add(recipeInput);
+            }
+            JavaScriptSerializer serializer = new JavaScriptSerializer();
+            RecipeIngredientsJsonHiddenField.Value = serializer.Serialize(recipeInputs);
+        }
         protected void AddProductButton_Click(object sender, EventArgs e)
         {
             ResultLabel.Text = string.Empty;
@@ -84,131 +195,41 @@ namespace CostWise
                 ResultLabel.Text = "יש לבחור יחידת תוצר.";
                 return;
             }
-            try
+            string recipeIngredientsJson = RecipeIngredientsJsonHiddenField.Value;
+            if (string.IsNullOrWhiteSpace(recipeIngredientsJson))
             {
-                int userId = (int)Session["UserId"];
-                int createdProductId = ProductBLL.CreateProduct(userId, productName, yieldQuantity, yieldUnitId);
-                Session["RecipeMessage"] = "המוצר נוסף בהצלחה. כעת ניתן להוסיף רכיבים למתכון.";
-                Response.Redirect("~/Recipe.aspx?productId=" + createdProductId, false);
-                Context.ApplicationInstance.CompleteRequest();
+                ResultLabel.Text = "יש להוסיף לפחות רכיב אחד למתכון.";
                 return;
             }
-            catch (ArgumentException ex)
+            List<RecipeIngredientInput> recipeIngredients;
+            try
             {
-                ResultLabel.Text = ex.Message;
-            }
-            catch (InvalidOperationException ex)
-            {
-                ResultLabel.Text = ex.Message;
+                JavaScriptSerializer serializer = new JavaScriptSerializer();
+                recipeIngredients = serializer.Deserialize<List<RecipeIngredientInput>>(recipeIngredientsJson);
             }
             catch (Exception)
             {
-                ResultLabel.Text = "אירעה שגיאה בעת הוספת המוצר.";
-            }
-        }
-        protected void ProductsGrid_RowEditing(object sender, GridViewEditEventArgs e)
-        {
-            ResultLabel.Text = string.Empty;
-            ProductsGrid.EditIndex = e.NewEditIndex;
-            LoadProducts();
-        }
-        protected void ProductsGrid_RowCancelingEdit(object sender, GridViewCancelEditEventArgs e)
-        {
-            ResultLabel.Text = string.Empty;
-            ProductsGrid.EditIndex = -1;
-            LoadProducts();
-        }
-        protected void ProductsGrid_RowDataBound(object sender, GridViewRowEventArgs e)
-        {
-            if (e.Row.RowType != DataControlRowType.DataRow)
-            {
+                ResultLabel.Text = "פרטי המתכון שהתקבלו אינם תקינים.";
                 return;
             }
-            bool isActive = Convert.ToBoolean(DataBinder.Eval(e.Row.DataItem, "IsActive"));
-            bool isEditRow = (e.Row.RowState & DataControlRowState.Edit) != 0;
-            if (!isActive && !isEditRow)
+            if (recipeIngredients == null || recipeIngredients.Count == 0)
             {
-                TableCell commandCell = e.Row.Cells[e.Row.Cells.Count - 1];
-                foreach (Control control in commandCell.Controls)
-                {
-                    LinkButton actionButton = control as LinkButton;
-                    if (actionButton == null)
-                    {
-                        continue;
-                    }
-                    if (string.Equals(actionButton.CommandName, "Edit", StringComparison.OrdinalIgnoreCase))
-                    {
-                        actionButton.Text = "הפעל מחדש";
-                    }
-                    else if (string.Equals(actionButton.CommandName, "Delete", StringComparison.OrdinalIgnoreCase))
-                    {
-                        actionButton.Visible = false;
-                    }
-                }
+                ResultLabel.Text = "יש להוסיף לפחות רכיב אחד למתכון.";
                 return;
             }
-            if (!isEditRow)
-            {
-                return;
-            }
-            DropDownList editYieldUnitDropDownList = (DropDownList)e.Row.FindControl("EditYieldUnitDropDownList");
-            if (editYieldUnitDropDownList == null)
-            {
-                return;
-            }
-            int userId = (int)Session["UserId"];
-            List<MeasurementUnit> availableUnits = MeasurementUnitBLL.GetAvailableUnits(userId);
-            editYieldUnitDropDownList.DataSource = availableUnits;
-            editYieldUnitDropDownList.DataTextField = "UnitName";
-            editYieldUnitDropDownList.DataValueField = "MeasurementUnitId";
-            editYieldUnitDropDownList.DataBind();
-            string currentYieldUnitLabel = DataBinder.Eval(e.Row.DataItem, "YieldUnitLabel")?.ToString();
-            ListItem currentUnitItem = editYieldUnitDropDownList.Items.FindByText(currentYieldUnitLabel);
-            if (currentUnitItem != null)
-            {
-                currentUnitItem.Selected = true;
-            }
-        }
-        protected void ProductsGrid_RowUpdating(object sender, GridViewUpdateEventArgs e)
-        {
-            ResultLabel.Text = string.Empty;
-            int productId = Convert.ToInt32(ProductsGrid.DataKeys[e.RowIndex].Values["ProductId"]);
-            bool isActive = Convert.ToBoolean(ProductsGrid.DataKeys[e.RowIndex].Values["IsActive"]);
-            string productName = e.NewValues["ProductName"]?.ToString();
-            decimal yieldQuantity;
-            if (!decimal.TryParse(e.NewValues["YieldQuantity"]?.ToString(), out yieldQuantity))
-            {
-                e.Cancel = true;
-                ResultLabel.Text = "יש להזין כמות תוצר מספרית.";
-                return;
-            }
-            GridViewRow row = ProductsGrid.Rows[e.RowIndex];
-            DropDownList editYieldUnitDropDownList = (DropDownList)row.FindControl("EditYieldUnitDropDownList");
-            if (editYieldUnitDropDownList == null)
-            {
-                e.Cancel = true;
-                ResultLabel.Text = "לא ניתן לקרוא את יחידת התוצר שנבחרה.";
-                return;
-            }
-            int yieldUnitId;
-            if (!int.TryParse(editYieldUnitDropDownList.SelectedValue, out yieldUnitId))
-            {
-                e.Cancel = true;
-                ResultLabel.Text = "יש לבחור יחידת תוצר תקינה.";
-                return;
-            }
+            bool isEditingProduct = EditingProductId > 0;
             try
             {
                 int userId = (int)Session["UserId"];
-                if (isActive)
+                if (isEditingProduct)
                 {
-                    ProductBLL.UpdateProduct(userId, productId, productName, yieldQuantity, yieldUnitId);
-                    Session["ProductsMessage"] = "המוצר עודכן בהצלחה.";
+                    ProductBLL.UpdateProductWithRecipe(userId, EditingProductId, productName, yieldQuantity, yieldUnitId, recipeIngredients);
+                    Session["ProductsMessage"] = "המוצר והמתכון עודכנו בהצלחה.";
                 }
                 else
                 {
-                    ProductBLL.ReactivateProduct(userId, productId, productName, yieldQuantity, yieldUnitId);
-                    Session["ProductsMessage"] = "המוצר הופעל מחדש בהצלחה.";
+                    ProductBLL.CreateProductWithRecipe(userId, productName, yieldQuantity, yieldUnitId, recipeIngredients);
+                    Session["ProductsMessage"] = "המוצר והמתכון נוצרו בהצלחה.";
                 }
                 Response.Redirect("~/Products.aspx", false);
                 Context.ApplicationInstance.CompleteRequest();
@@ -216,18 +237,122 @@ namespace CostWise
             }
             catch (ArgumentException ex)
             {
+                ResultLabel.Text = ex.Message;
+            }
+            catch (InvalidOperationException ex)
+            {
+                ResultLabel.Text = ex.Message;
+            }
+            catch (Exception)
+            {
+                ResultLabel.Text = isEditingProduct ? "אירעה שגיאה בעת עדכון המוצר." : "אירעה שגיאה בעת הוספת המוצר.";
+            }
+        }
+        protected void CancelProductEditButton_Click(object sender, EventArgs e)
+        {
+            EditingProductId = 0;
+            SelectedRecipeProductId = 0;
+            ProductsGrid.EditIndex = -1;
+            RecipeIngredientsJsonHiddenField.Value = string.Empty;
+            Response.Redirect("~/Products.aspx", false);
+            Context.ApplicationInstance.CompleteRequest();
+        }
+        protected void ProductsGrid_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            if (!string.Equals(e.CommandName, "OpenRecipe", StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+            int productId;
+            if (!int.TryParse(Convert.ToString(e.CommandArgument), out productId) || productId <= 0)
+            {
+                ResultLabel.Text = "לא ניתן לזהות את המוצר המבוקש.";
+                return;
+            }
+            if (SelectedRecipeProductId == productId)
+            {
+                SelectedRecipeProductId = 0;
+                ProductRecipeDetailsPanel.Visible = false;
+                UpdateRecipeSelectionState();
+                ResultLabel.Text = string.Empty;
+                return;
+            }
+            SelectedRecipeProductId = 0;
+            ProductRecipeDetailsPanel.Visible = false;
+            try
+            {
+                int userId = (int)Session["UserId"];
+                LoadProductRecipeDetails(userId, productId);
+                SelectedRecipeProductId = productId;
+                UpdateRecipeSelectionState();
+                ResultLabel.Text = string.Empty;
+            }
+            catch (ArgumentException ex)
+            {
+                ResultLabel.Text = ex.Message;
+            }
+            catch (InvalidOperationException ex)
+            {
+                ResultLabel.Text = ex.Message;
+            }
+            catch (Exception)
+            {
+                ResultLabel.Text = "אירעה שגיאה בעת טעינת פרטי המתכון.";
+            }
+        }
+        protected void ProductsGrid_RowEditing(object sender, GridViewEditEventArgs e)
+        {
+            ResultLabel.Text = string.Empty;
+            DataKey productDataKey = ProductsGrid.DataKeys[e.NewEditIndex];
+            if (productDataKey == null)
+            {
                 e.Cancel = true;
+                ResultLabel.Text = "לא ניתן לזהות את המוצר לעריכה.";
+                return;
+            }
+            int productId;
+            if (!int.TryParse(Convert.ToString(productDataKey.Values["ProductId"]), out productId))
+            {
+                e.Cancel = true;
+                ResultLabel.Text = "מזהה המוצר לעריכה אינו תקין.";
+                return;
+            }
+            try
+            {
+                int userId = (int)Session["UserId"];
+                LoadProductForEditing(userId, productId);
+                LoadRecipeForEditing(userId, productId);
+                EditingProductId = productId;
+                UpdateProductFormMode();
+                SelectedRecipeProductId = 0;
+                ProductRecipeDetailsPanel.Visible = false;
+                e.Cancel = true;
+                ProductsGrid.EditIndex = -1;
+                UpdateRecipeSelectionState();
+            }
+            catch (ArgumentException ex)
+            {
+                e.Cancel = true;
+                EditingProductId = 0;
+                ProductsGrid.EditIndex = -1;
+                RecipeIngredientsJsonHiddenField.Value = string.Empty;
                 ResultLabel.Text = ex.Message;
             }
             catch (InvalidOperationException ex)
             {
                 e.Cancel = true;
+                EditingProductId = 0;
+                ProductsGrid.EditIndex = -1;
+                RecipeIngredientsJsonHiddenField.Value = string.Empty;
                 ResultLabel.Text = ex.Message;
             }
             catch (Exception)
             {
                 e.Cancel = true;
-                ResultLabel.Text = isActive ? "אירעה שגיאה בעת עדכון המוצר." : "אירעה שגיאה בעת הפעלה מחדש של המוצר.";
+                EditingProductId = 0;
+                ProductsGrid.EditIndex = -1;
+                RecipeIngredientsJsonHiddenField.Value = string.Empty;
+                ResultLabel.Text = "אירעה שגיאה בעת טעינת המוצר לעריכה.";
             }
         }
         protected void ProductsGrid_RowDeleting(object sender, GridViewDeleteEventArgs e)

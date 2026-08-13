@@ -16,5 +16,13 @@ namespace CostWise
             // Code that runs on application startup
             GlobalConfiguration.Configure(WebApiConfig.Register);
         }
+        void Application_PostAuthorizeRequest(object sender, EventArgs e)
+        {
+            string requestPath = Request.AppRelativeCurrentExecutionFilePath;
+            if (requestPath.StartsWith("~/api/", StringComparison.OrdinalIgnoreCase))
+            {
+                HttpContext.Current.SetSessionStateBehavior(SessionStateBehavior.ReadOnly);
+            }
+        }
     }
 }

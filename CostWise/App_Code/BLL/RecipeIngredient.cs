@@ -8,6 +8,7 @@ namespace CostWise.App_Code.BLL
         public int IngredientId { get; set; }
         public decimal Quantity { get; set; }
         public int MeasurementUnitId { get; set; }
+        public decimal? ManualIngredientCostOverride { get; set; }
         public int SortOrder { get; set; }
     }
 }

@@ -91,8 +91,11 @@
     <Content Include="Login.aspx" />
     <Content Include="MeasurementUnits.aspx" />
     <Content Include="MeasurementUnitTest.aspx" />
+    <Content Include="ProductRecycleBin.aspx" />
     <Content Include="Recipe.aspx" />
     <Content Include="Register.aspx" />
+    <Content Include="Scripts\product-builder.js" />
+    <Content Include="Scripts\product-recipe-details.js" />
     <Content Include="Web.config" />
     <Content Include="Products.aspx" />
   </ItemGroup>
@@ -192,6 +195,7 @@
     <Content Include="BusinessProfile.aspx.designer.cs">
       <DependentUpon>BusinessProfile.aspx</DependentUpon>
     </Content>
+    <Content Include="App_Code\Controllers\ProductBuilderDataController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -230,7 +234,15 @@
     <Content Include="IngredientRecycleBin.aspx.designer.cs">
       <DependentUpon>IngredientRecycleBin.aspx</DependentUpon>
     </Content>
+    <Compile Include="Models\ProductBuilderDataDto.cs" />
     <Compile Include="Models\RecipeIngredientDisplayDto.cs" />
+    <Content Include="ProductRecycleBin.aspx.cs">
+      <DependentUpon>ProductRecycleBin.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Content>
+    <Content Include="ProductRecycleBin.aspx.designer.cs">
+      <DependentUpon>ProductRecycleBin.aspx</DependentUpon>
+    </Content>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

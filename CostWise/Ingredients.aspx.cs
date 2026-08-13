@@ -108,6 +108,7 @@ namespace CostWise
             {
                 int userId = (int)Session["UserId"];
                 IngredientBLL.CreateIngredient(userId, ingredientName, packagePrice, packageQuantity, packageUnitId);
+                Session["InvalidateProductBuilderDataCache"] = true;
                 Session["IngredientsMessage"] = "הרכיב נוסף בהצלחה.";
                 Response.Redirect("~/Ingredients.aspx", false);
                 Context.ApplicationInstance.CompleteRequest();
@@ -176,6 +177,7 @@ namespace CostWise
             {
                 int userId = (int)Session["UserId"];
                 IngredientBLL.UpdateIngredient(userId, ingredientId, ingredientName, packagePrice, packageQuantity, packageUnitId);
+                Session["InvalidateProductBuilderDataCache"] = true;
                 Session["IngredientsMessage"] = "הרכיב עודכן בהצלחה.";
                 Response.Redirect("~/Ingredients.aspx", false);
                 Context.ApplicationInstance.CompleteRequest();
@@ -233,6 +235,7 @@ namespace CostWise
             try
             {
                 string deactivatedIngredientName = IngredientBLL.DeactivateIngredient(userId, ingredientId);
+                Session["InvalidateProductBuilderDataCache"] = true;
                 string safeIngredientName = Server.HtmlEncode(deactivatedIngredientName);
                 Session["IngredientsMessage"] = "\"" + safeIngredientName + "\" הועבר לסל המחזור וניתן להחזירו בכל עת.";
                 Response.Redirect("~/Ingredients.aspx", false);

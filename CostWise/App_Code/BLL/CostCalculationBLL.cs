@@ -109,6 +109,42 @@ namespace CostWise.App_Code.BLL
             }
             return recipeQuantityInBaseUnit / packageQuantityInBaseUnit * packagePrice;
         }
+        public static decimal CalculateIngredientCostPreview(int userId, int ingredientId, decimal quantity, int measurementUnitId, int? productId = null)
+        {
+            if (userId <= 0)
+            {
+                throw new ArgumentException("זהות המשתמש אינה תקינה.");
+            }
+            if (ingredientId <= 0)
+            {
+                throw new ArgumentException("מזהה הרכיב אינו תקין.");
+            }
+            if (quantity <= 0)
+            {
+                throw new ArgumentException("כמות הרכיב חייבת להיות גדולה מאפס.");
+            }
+            if (quantity > 999999999999.999999m)
+            {
+                throw new ArgumentException("כמות הרכיב גדולה מדי.");
+            }
+            if (decimal.Round(quantity, 6) != quantity)
+            {
+                throw new ArgumentException("כמות הרכיב יכולה להכיל עד 6 ספרות אחרי הנקודה.");
+            }
+            if (measurementUnitId <= 0)
+            {
+                throw new ArgumentException("מזהה יחידת המידה אינו תקין.");
+            }
+            List<Ingredient> ingredients = ProductBLL.GetIngredientsForProductBuilder(userId, productId);
+            Ingredient ingredient = GetIngredientForCalculation(ingredients, ingredientId);
+            List<MeasurementUnit> availableUnits = MeasurementUnitBLL.GetAvailableUnits(userId);
+            MeasurementUnit packageUnit = GetUnitForCalculation(availableUnits, ingredient.PackageUnitId);
+            MeasurementUnit recipeUnit = GetUnitForCalculation(availableUnits, measurementUnitId);
+            UnitConversionBLL.ValidateCompatibleUnits(packageUnit, recipeUnit);
+            decimal packageQuantityInBaseUnit = UnitConversionBLL.ConvertToBaseUnit(ingredient.PackageQuantity, packageUnit);
+            decimal recipeQuantityInBaseUnit = UnitConversionBLL.ConvertToBaseUnit(quantity, recipeUnit);
+            return CalculateIngredientCost(recipeQuantityInBaseUnit, packageQuantityInBaseUnit, ingredient.PackagePrice);
+        }
         private static CostCalculationItem CreateCalculationItem(RecipeIngredient recipeIngredient, Ingredient ingredient, MeasurementUnit packageUnit, MeasurementUnit recipeUnit, MeasurementUnit baseUnit)
         {
             if (recipeIngredient == null)
@@ -136,7 +172,12 @@ namespace CostWise.App_Code.BLL
             decimal packageQuantityInBaseUnit = UnitConversionBLL.ConvertToBaseUnit(ingredient.PackageQuantity, packageUnit);
             decimal recipeQuantityInBaseUnit = UnitConversionBLL.ConvertToBaseUnit(recipeIngredient.Quantity, recipeUnit);
             decimal pricePerBaseUnit = ingredient.PackagePrice / packageQuantityInBaseUnit;
-            decimal ingredientCost = CalculateIngredientCost(recipeQuantityInBaseUnit, packageQuantityInBaseUnit, ingredient.PackagePrice);
+            decimal calculatedIngredientCost = CalculateIngredientCost(recipeQuantityInBaseUnit, packageQuantityInBaseUnit, ingredient.PackagePrice);
+            if (recipeIngredient.ManualIngredientCostOverride.HasValue && recipeIngredient.ManualIngredientCostOverride.Value < 0)
+            {
+                throw new InvalidOperationException("מחיר ידני שנשמר במתכון אינו תקין.");
+            }
+            decimal ingredientCost = recipeIngredient.ManualIngredientCostOverride.HasValue ? recipeIngredient.ManualIngredientCostOverride.Value : calculatedIngredientCost;
             return new CostCalculationItem
             {
                 IngredientId = ingredient.IngredientId,
@@ -154,6 +195,7 @@ namespace CostWise.App_Code.BLL
                 PackageQuantityInBaseUnitSnapshot = packageQuantityInBaseUnit,
                 RecipeQuantityInBaseUnitSnapshot = recipeQuantityInBaseUnit,
                 PricePerBaseUnitSnapshot = pricePerBaseUnit,
+                ManualIngredientCostOverrideSnapshot = recipeIngredient.ManualIngredientCostOverride,
                 IngredientCostSnapshot = ingredientCost,
                 SortOrderSnapshot = recipeIngredient.SortOrder
             };
@@ -209,6 +251,36 @@ namespace CostWise.App_Code.BLL
             }
             CostCalculation calculation = CreateCalculationSummary(product, totalIngredientCost);
             return new CostCalculationResult { Calculation = calculation, Items = calculationItems };
+        }
+        public static List<Product> GetActiveProductsWithCurrentCosts(int userId)
+        {
+            if (userId <= 0)
+            {
+                throw new ArgumentException("זהות המשתמש אינה תקינה.");
+            }
+            List<Product> products = ProductBLL.GetActiveProductsForUser(userId);
+            foreach (Product product in products)
+            {
+                try
+                {
+                    CostCalculationResult result = CalculateProductCost(userId, product.ProductId);
+                    if (result == null || result.Calculation == null)
+                    {
+                        product.CurrentTotalCost = null;
+                        continue;
+                    }
+                    product.CurrentTotalCost = result.Calculation.TotalIngredientCostSnapshot;
+                }
+                catch (ArgumentException)
+                {
+                    product.CurrentTotalCost = null;
+                }
+                catch (InvalidOperationException)
+                {
+                    product.CurrentTotalCost = null;
+                }
+            }
+            return products;
         }
         public static int CalculateAndSaveProductCost(int userId, int productId)
         {

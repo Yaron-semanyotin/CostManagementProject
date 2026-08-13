@@ -9,6 +9,7 @@ namespace CostWise.App_Code.BLL
         public string ProductName { get; set; }
         public decimal YieldQuantity { get; set; }
         public string YieldUnitLabel { get; set; }
+        public decimal? CurrentTotalCost { get; set; }
         public string InstructionsHtml { get; set; }
         public string ImagePath { get; set; }
         public bool IsActive { get; set; }

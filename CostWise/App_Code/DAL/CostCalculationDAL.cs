@@ -54,6 +54,7 @@ namespace CostWise.App_Code.DAL
             PackageQuantityInBaseUnitSnapshot,
             RecipeQuantityInBaseUnitSnapshot,
             PricePerBaseUnitSnapshot,
+            ManualIngredientCostOverrideSnapshot,
             IngredientCostSnapshot,
             SortOrderSnapshot
         )
@@ -74,6 +75,7 @@ namespace CostWise.App_Code.DAL
             @PackageQuantityInBaseUnitSnapshot,
             @RecipeQuantityInBaseUnitSnapshot,
             @PricePerBaseUnitSnapshot,
+            @ManualIngredientCostOverrideSnapshot,
             @IngredientCostSnapshot,
             @SortOrderSnapshot
         FROM dbo.T_Users AS u
@@ -140,6 +142,7 @@ namespace CostWise.App_Code.DAL
             item.PackageQuantityInBaseUnitSnapshot,
             item.RecipeQuantityInBaseUnitSnapshot,
             item.PricePerBaseUnitSnapshot,
+            item.ManualIngredientCostOverrideSnapshot,
             item.IngredientCostSnapshot,
             item.SortOrderSnapshot
         FROM dbo.T_Users AS u
@@ -179,6 +182,7 @@ namespace CostWise.App_Code.DAL
             {
                 throw new ArgumentNullException(nameof(reader));
             }
+            int manualCostSnapshotOrdinal = reader.GetOrdinal("ManualIngredientCostOverrideSnapshot");
             return new CostCalculationItem
             {
                 CostCalculationItemId = reader.GetInt32(reader.GetOrdinal("CostCalculationItemId")),
@@ -198,6 +202,7 @@ namespace CostWise.App_Code.DAL
                 PackageQuantityInBaseUnitSnapshot = reader.GetDecimal(reader.GetOrdinal("PackageQuantityInBaseUnitSnapshot")),
                 RecipeQuantityInBaseUnitSnapshot = reader.GetDecimal(reader.GetOrdinal("RecipeQuantityInBaseUnitSnapshot")),
                 PricePerBaseUnitSnapshot = reader.GetDecimal(reader.GetOrdinal("PricePerBaseUnitSnapshot")),
+                ManualIngredientCostOverrideSnapshot = reader.IsDBNull(manualCostSnapshotOrdinal) ? (decimal?)null : reader.GetDecimal(manualCostSnapshotOrdinal),
                 IngredientCostSnapshot = reader.GetDecimal(reader.GetOrdinal("IngredientCostSnapshot")),
                 SortOrderSnapshot = reader.GetInt32(reader.GetOrdinal("SortOrderSnapshot"))
             };
@@ -331,6 +336,10 @@ namespace CostWise.App_Code.DAL
             AddDecimalParameter(command, "@PackageQuantityInBaseUnitSnapshot", 28, 12, item.PackageQuantityInBaseUnitSnapshot);
             AddDecimalParameter(command, "@RecipeQuantityInBaseUnitSnapshot", 28, 12, item.RecipeQuantityInBaseUnitSnapshot);
             AddDecimalParameter(command, "@PricePerBaseUnitSnapshot", 28, 12, item.PricePerBaseUnitSnapshot);
+            SqlParameter manualCostSnapshotParameter = command.Parameters.Add("@ManualIngredientCostOverrideSnapshot", SqlDbType.Decimal);
+            manualCostSnapshotParameter.Precision = 28;
+            manualCostSnapshotParameter.Scale = 12;
+            manualCostSnapshotParameter.Value = item.ManualIngredientCostOverrideSnapshot.HasValue ? (object)item.ManualIngredientCostOverrideSnapshot.Value : DBNull.Value;
             AddDecimalParameter(command, "@IngredientCostSnapshot", 28, 12, item.IngredientCostSnapshot);
             command.Parameters.Add("@SortOrderSnapshot", SqlDbType.Int).Value = item.SortOrderSnapshot;
         }
