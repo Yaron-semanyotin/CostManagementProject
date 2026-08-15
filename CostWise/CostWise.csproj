@@ -94,6 +94,7 @@
     <Content Include="ProductRecycleBin.aspx" />
     <Content Include="Recipe.aspx" />
     <Content Include="Register.aspx" />
+    <Content Include="Scripts\calculation-history-chart.js" />
     <Content Include="Scripts\product-builder.js" />
     <Content Include="Scripts\product-recipe-details.js" />
     <Content Include="Web.config" />
@@ -159,6 +160,8 @@
     <Content Include="App_Code\DAL\BusinessDAL.cs" />
     <Content Include="App_Code\BLL\BusinessBLL.cs" />
     <Content Include="App_Code\BLL\RecipeIngredientInput.cs" />
+    <Content Include="App_Code\BLL\ProductCalculationHistoryGroup.cs" />
+    <Content Include="App_Code\BLL\CostCalculationChangeReason.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Content Include="DatabaseConnectionTest.aspx.cs">
       <DependentUpon>DatabaseConnectionTest.aspx</DependentUpon>

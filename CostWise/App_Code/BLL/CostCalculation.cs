@@ -13,5 +13,6 @@ namespace CostWise.App_Code.BLL
         public decimal TotalIngredientCostSnapshot { get; set; }
         public decimal CostPerYieldUnitSnapshot { get; set; }
         public DateTime CalculatedAtUtc { get; set; }
+        public DateTime? ValidUntilUtc { get; set; }
     }
 }

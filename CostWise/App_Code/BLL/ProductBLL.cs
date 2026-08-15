@@ -258,6 +258,7 @@ namespace CostWise.App_Code.BLL
             {
                 throw new InvalidOperationException("לא ניתן לעדכן את המוצר והמתכון.");
             }
+            CostCalculationBLL.CalculateAndSaveProductCost(userId, productId);
         }
         public static void DeactivateProduct(int userId, int productId)
         {

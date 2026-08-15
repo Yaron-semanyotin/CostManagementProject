@@ -32,7 +32,7 @@
                     </div>
 
                     <div class="col-12 col-md-6 col-xl-3">
-                        <asp:Label ID="YieldQuantityLabel" runat="server" AssociatedControlID="YieldQuantityTextBox" CssClass="form-label" Text="כמות תוצר" />
+                        <asp:Label ID="YieldQuantityLabel" runat="server" AssociatedControlID="YieldQuantityTextBox" CssClass="form-label" Text="כמות" />
 
                         <asp:TextBox ID="YieldQuantityTextBox" runat="server" CssClass="form-control" inputmode="decimal" />
                     </div>

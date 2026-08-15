@@ -126,12 +126,6 @@
                             </li>
 
                             <li class="nav-item">
-                                <span
-                                    class="nav-link disabled" aria-disabled="true">חישוב עלויות
-                                </span>
-                            </li>
-
-                            <li class="nav-item">
                                 <a
                                     class='<%= GetNavigationLinkCssClass("~/CalculationHistory.aspx") %>'
                                     href='<%: ResolveUrl("~/CalculationHistory.aspx") %>'>היסטוריית חישובים

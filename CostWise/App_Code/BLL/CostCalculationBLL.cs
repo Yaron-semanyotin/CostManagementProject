@@ -293,7 +293,183 @@ namespace CostWise.App_Code.BLL
             {
                 throw new ArgumentException("זהות המשתמש אינה תקינה.");
             }
-            return CostCalculationDAL.GetCalculationsForUser(userId);
+            List<CostCalculation> calculations = CostCalculationDAL.GetCalculationsForUser(userId);
+            Dictionary<int, DateTime> newerCalculationDatesByProduct = new Dictionary<int, DateTime>();
+            foreach (CostCalculation calculation in calculations)
+            {
+                DateTime newerCalculationDate;
+                if (newerCalculationDatesByProduct.TryGetValue(
+                    calculation.ProductId,
+                    out newerCalculationDate))
+                {
+                    calculation.ValidUntilUtc = newerCalculationDate;
+                }
+                else
+                {
+                    calculation.ValidUntilUtc = null;
+                }
+                newerCalculationDatesByProduct[calculation.ProductId] = calculation.CalculatedAtUtc;
+            }
+            return calculations;
+        }
+        public static List<CostCalculation> GetCalculationHistory(int userId, DateTime? dateFromUtc, DateTime? dateToUtcExclusive)
+        {
+            if (dateFromUtc.HasValue && dateToUtcExclusive.HasValue && dateFromUtc.Value >= dateToUtcExclusive.Value)
+            {
+                throw new ArgumentException("תאריך ההתחלה חייב להיות מוקדם מתאריך הסיום.");
+            }
+            List<CostCalculation> calculations = GetCalculationHistory(userId);
+            return calculations.FindAll(calculation =>
+                (!dateFromUtc.HasValue || calculation.CalculatedAtUtc >= dateFromUtc.Value)
+                &&
+                (!dateToUtcExclusive.HasValue || calculation.CalculatedAtUtc < dateToUtcExclusive.Value));
+        }
+        public static List<ProductCalculationHistoryGroup> GetCalculationHistoryByProduct(int userId)
+        {
+            return GetCalculationHistoryByProduct(userId, null, null);
+        }
+        public static List<ProductCalculationHistoryGroup> GetCalculationHistoryByProduct(int userId, DateTime? dateFromUtc, DateTime? dateToUtcExclusive)
+        {
+            List<CostCalculation> calculations = GetCalculationHistory(userId, dateFromUtc, dateToUtcExclusive);
+            List<ProductCalculationHistoryGroup> groups = new List<ProductCalculationHistoryGroup>();
+            Dictionary<int, ProductCalculationHistoryGroup> groupsByProductId = new Dictionary<int, ProductCalculationHistoryGroup>();
+            foreach (CostCalculation calculation in calculations)
+            {
+                ProductCalculationHistoryGroup group;
+                if (!groupsByProductId.TryGetValue(calculation.ProductId, out group))
+                {
+                    group = new ProductCalculationHistoryGroup
+                    {
+                        ProductId = calculation.ProductId,
+                        ProductName = calculation.ProductNameSnapshot
+                    };
+                    groupsByProductId.Add(calculation.ProductId, group);
+                    groups.Add(group);
+                }
+                group.Calculations.Add(calculation);
+            }
+            foreach (ProductCalculationHistoryGroup group in groups)
+            {
+                if (group.Calculations.Count == 0)
+                {
+                    continue;
+                }
+                group.LatestTotalCost = group.Calculations[0].TotalIngredientCostSnapshot;
+                if (group.Calculations.Count < 2)
+                {
+                    continue;
+                }
+                decimal periodStartTotalCost = group.Calculations[group.Calculations.Count - 1].TotalIngredientCostSnapshot;
+                group.PeriodStartTotalCost = periodStartTotalCost;
+                if (periodStartTotalCost != 0m)
+                {
+                    group.PeriodChangePercentage = (group.LatestTotalCost - periodStartTotalCost) / periodStartTotalCost * 100m;
+                }
+            }
+            return groups;
+        }
+        private static CostCalculation FindPreviousCalculation(int userId, CostCalculation currentCalculation)
+        {
+            if (currentCalculation == null)
+            {
+                throw new ArgumentNullException(nameof(currentCalculation));
+            }
+            List<CostCalculation> calculations = GetCalculationHistory(userId);
+            bool currentCalculationFound = false;
+            foreach (CostCalculation calculation in calculations)
+            {
+                if (!currentCalculationFound)
+                {
+                    if (calculation.CostCalculationId == currentCalculation.CostCalculationId)
+                    {
+                        currentCalculationFound = true;
+                    }
+                    continue;
+                }
+                if (calculation.ProductId == currentCalculation.ProductId)
+                {
+                    return calculation;
+                }
+            }
+            return null;
+        }
+        private static CostCalculationChangeReason CreateChangeReason(CostCalculationItem previousItem, CostCalculationItem currentItem)
+        {
+            if (previousItem == null && currentItem == null)
+            {
+                throw new ArgumentException("נדרש לפחות פריט חישוב אחד להשוואה.");
+            }
+            CostCalculationItem availableItem = currentItem ?? previousItem;
+            decimal previousIngredientCost = previousItem == null ? 0m : previousItem.IngredientCostSnapshot;
+            decimal currentIngredientCost = currentItem == null ? 0m : currentItem.IngredientCostSnapshot;
+            return new CostCalculationChangeReason
+            {
+                IngredientId = availableItem.IngredientId,
+                IngredientName = availableItem.IngredientNameSnapshot,
+                WasAdded = previousItem == null,
+                WasRemoved = currentItem == null,
+                PackagePriceChanged = previousItem != null && currentItem != null && previousItem.PackagePriceSnapshot != currentItem.PackagePriceSnapshot,
+                PackageQuantityChanged = previousItem != null && currentItem != null && previousItem.PackageQuantityInBaseUnitSnapshot != currentItem.PackageQuantityInBaseUnitSnapshot,
+                RecipeQuantityChanged = previousItem != null && currentItem != null && previousItem.RecipeQuantityInBaseUnitSnapshot != currentItem.RecipeQuantityInBaseUnitSnapshot,
+                ManualOverrideChanged = previousItem != null && currentItem != null && previousItem.ManualIngredientCostOverrideSnapshot != currentItem.ManualIngredientCostOverrideSnapshot,
+                PreviousPackagePrice = previousItem == null ? (decimal?)null : previousItem.PackagePriceSnapshot,
+                CurrentPackagePrice = currentItem == null ? (decimal?)null : currentItem.PackagePriceSnapshot,
+                PackagePriceChange = previousItem == null || currentItem == null ? (decimal?)null : currentItem.PackagePriceSnapshot - previousItem.PackagePriceSnapshot,
+                PreviousPackageQuantityInBaseUnit = previousItem == null ? (decimal?)null : previousItem.PackageQuantityInBaseUnitSnapshot,
+                CurrentPackageQuantityInBaseUnit = currentItem == null ? (decimal?)null : currentItem.PackageQuantityInBaseUnitSnapshot,
+                PreviousRecipeQuantityInBaseUnit = previousItem == null ? (decimal?)null : previousItem.RecipeQuantityInBaseUnitSnapshot,
+                CurrentRecipeQuantityInBaseUnit = currentItem == null ? (decimal?)null : currentItem.RecipeQuantityInBaseUnitSnapshot,
+                PreviousManualIngredientCostOverride = previousItem == null ? (decimal?)null : previousItem.ManualIngredientCostOverrideSnapshot,
+                CurrentManualIngredientCostOverride = currentItem == null ? (decimal?)null : currentItem.ManualIngredientCostOverrideSnapshot,
+                PreviousIngredientCost = previousItem == null ? (decimal?)null : previousItem.IngredientCostSnapshot,
+                CurrentIngredientCost = currentItem == null ? (decimal?)null : currentItem.IngredientCostSnapshot,
+                IngredientCostChange = currentIngredientCost - previousIngredientCost,
+                BaseUnitName = availableItem.BaseUnitNameSnapshot
+            };
+        }
+        private static List<CostCalculationChangeReason> BuildChangeReasons(List<CostCalculationItem> previousItems, List<CostCalculationItem> currentItems)
+        {
+            if (previousItems == null)
+            {
+                throw new ArgumentNullException(nameof(previousItems));
+            }
+            if (currentItems == null)
+            {
+                throw new ArgumentNullException(nameof(currentItems));
+            }
+            Dictionary<int, CostCalculationItem> previousItemsByIngredientId = new Dictionary<int, CostCalculationItem>();
+            foreach (CostCalculationItem previousItem in previousItems)
+            {
+                previousItemsByIngredientId.Add(previousItem.IngredientId, previousItem);
+            }
+            HashSet<int> currentIngredientIds = new HashSet<int>();
+            List<CostCalculationChangeReason> reasons = new List<CostCalculationChangeReason>();
+            foreach (CostCalculationItem currentItem in currentItems)
+            {
+                currentIngredientIds.Add(currentItem.IngredientId);
+                CostCalculationItem previousItem;
+                previousItemsByIngredientId.TryGetValue(currentItem.IngredientId, out previousItem);
+                CostCalculationChangeReason reason = CreateChangeReason(previousItem, currentItem);
+                if (reason.WasAdded || reason.PackagePriceChanged || reason.PackageQuantityChanged || reason.RecipeQuantityChanged || reason.ManualOverrideChanged || reason.IngredientCostChange != 0m)
+                {
+                    reasons.Add(reason);
+                }
+            }
+            foreach (CostCalculationItem previousItem in previousItems)
+            {
+                if (currentIngredientIds.Contains(previousItem.IngredientId))
+                {
+                    continue;
+                }
+                reasons.Add(CreateChangeReason(previousItem, null));
+            }
+            reasons.Sort(delegate (CostCalculationChangeReason firstReason, CostCalculationChangeReason secondReason)
+                {
+                    decimal firstImpact = Math.Abs(firstReason.IngredientCostChange);
+                    decimal secondImpact = Math.Abs(secondReason.IngredientCostChange);
+                    return secondImpact.CompareTo(firstImpact);
+                });
+            return reasons;
         }
         public static CostCalculationResult GetCalculationDetails(int userId, int costCalculationId)
         {
@@ -314,6 +490,18 @@ namespace CostWise.App_Code.BLL
             {
                 throw new InvalidOperationException("פירוט החישוב ההיסטורי חסר.");
             }
+            CostCalculation previousCalculation = FindPreviousCalculation(userId, result.Calculation);
+            result.PreviousCalculation = previousCalculation;
+            if (previousCalculation == null)
+            {
+                return result;
+            }
+            CostCalculationResult previousResult = CostCalculationDAL.GetCalculationDetailsForUser(userId, previousCalculation.CostCalculationId);
+            if (previousResult == null || previousResult.Calculation == null || previousResult.Items == null || previousResult.Items.Count == 0)
+            {
+                throw new InvalidOperationException("פרטי החישוב הקודם חסרים.");
+            }
+            result.ChangeReasons = BuildChangeReasons(previousResult.Items, result.Items);
             return result;
         }
     }
