@@ -58,6 +58,25 @@
                     </div>
                 </div>
 
+                <div class="mt-4">
+                    <button id="ToggleInstructionsButton" type="button" class="btn btn-outline-primary"
+                        aria-controls="InstructionsEditorPanel" aria-expanded="false">
+                        הוסף הוראות הכנה
+                    </button>
+                </div>
+
+                <div id="InstructionsEditorPanel" class="mt-3" hidden>
+                    <asp:Label ID="InstructionsHtmlLabel" runat="server" AssociatedControlID="InstructionsHtmlTextBox" CssClass="form-label"
+                        Text="הוראות הכנה" />
+
+                    <asp:TextBox ID="InstructionsHtmlTextBox" runat="server" ClientIDMode="Static" TextMode="MultiLine"
+                        Rows="8" CssClass="form-control" ValidateRequestMode="Disabled" />
+
+                    <div class="form-text">
+                        ניתן להזין את שלבי ההכנה ולעצב אותם באמצעות עורך הטקסט.
+                    </div>
+                </div>
+
                 <div class="border-top mt-4 pt-4"
                     aria-labelledby="RecipeIngredientsHeading">
 
@@ -168,40 +187,40 @@
                         GridLines="None" UseAccessibleHeader="true" EmptyDataText="לא נמצאו מוצרים" DataKeyNames="ProductId"
                         OnRowEditing="ProductsGrid_RowEditing" OnRowDeleting="ProductsGrid_RowDeleting" OnRowCommand="ProductsGrid_RowCommand">
 
-                        <HeaderStyle CssClass="table-light" />
+                        <headerstyle cssclass="table-light" />
 
-                        <Columns>
+                        <columns>
                             <asp:BoundField DataField="ProductName" HeaderText="שם המוצר">
-                                <ControlStyle CssClass="form-control form-control-sm" />
+                                <controlstyle cssclass="form-control form-control-sm" />
                             </asp:BoundField>
 
                             <asp:BoundField DataField="YieldQuantity" HeaderText="כמות תוצר" DataFormatString="{0:0.######}" HtmlEncode="false">
-                                <ControlStyle CssClass="form-control form-control-sm" />
+                                <controlstyle cssclass="form-control form-control-sm" />
                             </asp:BoundField>
 
                             <asp:TemplateField HeaderText="יחידת תוצר">
-                                <ItemTemplate>
+                                <itemtemplate>
                                     <asp:Label ID="YieldUnitNameLabel" runat="server" Text='<%# Eval("YieldUnitLabel") %>' />
-                                </ItemTemplate>
+                                </itemtemplate>
                             </asp:TemplateField>
 
                             <asp:TemplateField HeaderText="מחיר סופי">
-                                <ItemTemplate>
+                                <itemtemplate>
                                     <asp:Label ID="CurrentTotalCostLabel" runat="server"
                                         Text='<%# Eval("CurrentTotalCost") == null? "לא זמין": string.Format("{0:N2} ₪", Eval("CurrentTotalCost")) %>' />
-                                </ItemTemplate>
+                                </itemtemplate>
                             </asp:TemplateField>
 
                             <asp:TemplateField HeaderText="מתכון">
-                                <ItemTemplate>
+                                <itemtemplate>
                                     <asp:LinkButton ID="OpenRecipeButton" runat="server" Text="פתח מתכון" CssClass="btn btn-outline-primary btn-sm"
                                         CommandName="OpenRecipe" CommandArgument='<%# Eval("ProductId") %>' CausesValidation="false" data-role="open-recipe"
                                         data-product-id='<%# Eval("ProductId") %>' aria-expanded="false" aria-controls="ProductRecipeDetailsPanel" />
-                                </ItemTemplate>
+                                </itemtemplate>
                             </asp:TemplateField>
                             <asp:CommandField HeaderText="פעולות" ShowEditButton="true" ShowDeleteButton="true"
                                 EditText="ערוך" DeleteText="מחק" />
-                        </Columns>
+                        </columns>
                     </asp:GridView>
                 </div>
                 <asp:Panel ID="ProductRecipeDetailsPanel" runat="server" ClientIDMode="Static" Visible="false" CssClass="border rounded-3 bg-light mt-4 p-3" role="region" aria-labelledby="RecipeDetailsHeading">
@@ -257,9 +276,9 @@
                             CssClass="table table-striped table-hover align-middle mb-0" GridLines="None" UseAccessibleHeader="true"
                             EmptyDataText="לא נמצאו רכיבים במתכון.">
 
-                            <HeaderStyle CssClass="table-light" />
+                            <headerstyle cssclass="table-light" />
 
-                            <Columns>
+                            <columns>
                                 <asp:BoundField DataField="IngredientNameSnapshot" HeaderText="רכיב" />
 
                                 <asp:BoundField DataField="RecipeQuantitySnapshot" HeaderText="כמות במתכון" DataFormatString="{0:0.######}" HtmlEncode="false" />
@@ -269,13 +288,15 @@
                                 <asp:BoundField DataField="PackagePriceSnapshot" HeaderText="מחיר האריזה הנוכחי" DataFormatString="{0:N2} ₪" HtmlEncode="false" />
 
                                 <asp:BoundField DataField="IngredientCostSnapshot" HeaderText="מחיר לכמות" DataFormatString="{0:N2} ₪" HtmlEncode="false" />
-                            </Columns>
+                            </columns>
                         </asp:GridView>
                     </div>
                 </asp:Panel>
             </div>
         </div>
     </section>
+    <script src="https://cdn.jsdelivr.net/npm/tinymce@8.8.2/tinymce.min.js" crossorigin="anonymous"></script>
+    <script src="<%: ResolveUrl("~/Scripts/product-instructions-editor.js") %>?v=2"></script>
     <script src="<%: ResolveUrl("~/Scripts/product-builder.js") %>?v=3"></script>
     <script src="<%: ResolveUrl("~/Scripts/product-recipe-details.js") %>"></script>
 </asp:Content>

@@ -148,6 +148,7 @@ namespace CostWise
         {
             Product product = ProductBLL.GetActiveProductForUser(userId, productId);
             ProductNameTextBox.Text = product.ProductName;
+            InstructionsHtmlTextBox.Text = product.InstructionsHtml ?? string.Empty;
             YieldQuantityTextBox.Text = product.YieldQuantity.ToString("0.######");
             ListItem yieldUnitItem = YieldUnitDropDownList.Items.FindByText(product.YieldUnitLabel);
             if (yieldUnitItem == null)
@@ -183,6 +184,7 @@ namespace CostWise
         {
             ResultLabel.Text = string.Empty;
             string productName = ProductNameTextBox.Text;
+            string instructionsHtml = InstructionsHtmlTextBox.Text;
             decimal yieldQuantity;
             if (!decimal.TryParse(YieldQuantityTextBox.Text, out yieldQuantity))
             {
@@ -223,12 +225,12 @@ namespace CostWise
                 int userId = (int)Session["UserId"];
                 if (isEditingProduct)
                 {
-                    ProductBLL.UpdateProductWithRecipe(userId, EditingProductId, productName, yieldQuantity, yieldUnitId, recipeIngredients);
+                    ProductBLL.UpdateProductWithRecipe(userId, EditingProductId, productName, yieldQuantity, yieldUnitId, instructionsHtml, recipeIngredients);
                     Session["ProductsMessage"] = "המוצר והמתכון עודכנו בהצלחה.";
                 }
                 else
                 {
-                    ProductBLL.CreateProductWithRecipe(userId, productName, yieldQuantity, yieldUnitId, recipeIngredients);
+                    ProductBLL.CreateProductWithRecipe(userId, productName, yieldQuantity, yieldUnitId, instructionsHtml, recipeIngredients);
                     Session["ProductsMessage"] = "המוצר והמתכון נוצרו בהצלחה.";
                 }
                 Response.Redirect("~/Products.aspx", false);

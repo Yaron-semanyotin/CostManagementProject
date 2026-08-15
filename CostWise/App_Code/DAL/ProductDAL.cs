@@ -97,21 +97,24 @@ namespace CostWise.App_Code.DAL
                 }
             }
         }
-        public static int CreateProductWithRecipe(int userId, string productName, decimal yieldQuantity, string yieldUnitLabel, List<RecipeIngredientInput> recipeIngredients)
+        public static int CreateProductWithRecipe(int userId, string productName, decimal yieldQuantity,
+    string yieldUnitLabel, string instructionsHtml, List<RecipeIngredientInput> recipeIngredients)
         {
             const string productQuery = @"INSERT INTO dbo.T_Products
             (
                 BusinessId,
                 ProductName,
                 YieldQuantity,
-                YieldUnitLabel
+                YieldUnitLabel,
+                InstructionsHtml
             )
             OUTPUT INSERTED.ProductId
             SELECT
                 u.BusinessId,
                 @ProductName,
                 @YieldQuantity,
-                @YieldUnitLabel
+                @YieldUnitLabel,
+                @InstructionsHtml
             FROM dbo.T_Users AS u
             WHERE u.UserId = @UserId;";
             const string recipeIngredientQuery =
@@ -165,6 +168,7 @@ namespace CostWise.App_Code.DAL
                             yieldQuantityParameter.Scale = 6;
                             yieldQuantityParameter.Value = yieldQuantity;
                             productCommand.Parameters.Add("@YieldUnitLabel", SqlDbType.NVarChar, 50).Value = yieldUnitLabel;
+                            productCommand.Parameters.Add("@InstructionsHtml", SqlDbType.NVarChar, -1).Value = instructionsHtml == null ? (object)DBNull.Value : instructionsHtml;
                             productIdResult = productCommand.ExecuteScalar();
                         }
                         if (productIdResult == null || productIdResult == DBNull.Value)
@@ -210,7 +214,7 @@ namespace CostWise.App_Code.DAL
                 }
             }
         }
-        public static bool UpdateProductWithRecipe(int userId, int productId, string productName, decimal yieldQuantity, string yieldUnitLabel, List<RecipeIngredientInput> recipeIngredients)
+        public static bool UpdateProductWithRecipe(int userId, int productId, string productName, decimal yieldQuantity, string yieldUnitLabel, string instructionsHtml, List<RecipeIngredientInput> recipeIngredients)
         {
             const string updateProductQuery = @"
             UPDATE p
@@ -218,6 +222,7 @@ namespace CostWise.App_Code.DAL
                 p.ProductName = @ProductName,
                 p.YieldQuantity = @YieldQuantity,
                 p.YieldUnitLabel = @YieldUnitLabel,
+                p.InstructionsHtml = @InstructionsHtml,
                 p.UpdatedAtUtc = SYSUTCDATETIME()
             FROM dbo.T_Products AS p
             INNER JOIN dbo.T_Users AS u
@@ -286,6 +291,7 @@ namespace CostWise.App_Code.DAL
                             yieldQuantityParameter.Scale = 6;
                             yieldQuantityParameter.Value = yieldQuantity;
                             productCommand.Parameters.Add("@YieldUnitLabel", SqlDbType.NVarChar, 50).Value = yieldUnitLabel;
+                            productCommand.Parameters.Add("@InstructionsHtml", SqlDbType.NVarChar, -1).Value = instructionsHtml == null ? (object)DBNull.Value : instructionsHtml;
                             updatedProductRows = productCommand.ExecuteNonQuery();
                         }
                         if (updatedProductRows != 1)

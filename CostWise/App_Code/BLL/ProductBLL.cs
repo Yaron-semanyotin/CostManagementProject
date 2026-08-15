@@ -1,10 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
 using CostWise.App_Code.DAL;
+using Ganss.Xss;
+
 namespace CostWise.App_Code.BLL
 {
     public static class ProductBLL
     {
+        private static string SanitizeInstructionsHtml(string instructionsHtml)
+        {
+            if (string.IsNullOrWhiteSpace(instructionsHtml))
+            {
+                return null;
+            }
+            HtmlSanitizer sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedTags.Clear();
+            sanitizer.AllowedAttributes.Clear();
+            sanitizer.AllowedCssProperties.Clear();
+            sanitizer.AllowedAtRules.Clear();
+            sanitizer.AllowedSchemes.Clear();
+            sanitizer.AllowedTags.Add("p");
+            sanitizer.AllowedTags.Add("br");
+            sanitizer.AllowedTags.Add("strong");
+            sanitizer.AllowedTags.Add("b");
+            sanitizer.AllowedTags.Add("em");
+            sanitizer.AllowedTags.Add("i");
+            sanitizer.AllowedTags.Add("ul");
+            sanitizer.AllowedTags.Add("ol");
+            sanitizer.AllowedTags.Add("li");
+            sanitizer.AllowedTags.Add("h3");
+            sanitizer.AllowedTags.Add("h4");
+            sanitizer.AllowedTags.Add("blockquote");
+            string sanitizedHtml = sanitizer.Sanitize(instructionsHtml).Trim();
+            if (string.IsNullOrWhiteSpace(sanitizedHtml))
+            {
+                return null;
+            }
+            return sanitizedHtml;
+        }
         private static MeasurementUnit
     ValidateProductWithRecipeInput(int userId, string productName, decimal yieldQuantity, int yieldUnitId,
         List<RecipeIngredientInput> recipeIngredients, HashSet<int> allowedInactiveIngredientIds = null)
@@ -226,11 +259,12 @@ namespace CostWise.App_Code.BLL
             }
             return createdProductId;
         }
-        public static int CreateProductWithRecipe(int userId, string productName, decimal yieldQuantity, int yieldUnitId, List<RecipeIngredientInput> recipeIngredients)
+        public static int CreateProductWithRecipe(int userId, string productName, decimal yieldQuantity, int yieldUnitId, string instructionsHtml, List<RecipeIngredientInput> recipeIngredients)
         {
             MeasurementUnit yieldUnit = ValidateProductWithRecipeInput(userId, productName, yieldQuantity, yieldUnitId, recipeIngredients);
             productName = productName.Trim();
-            int createdProductId = ProductDAL.CreateProductWithRecipe(userId, productName, yieldQuantity, yieldUnit.UnitName, recipeIngredients);
+            string sanitizedInstructionsHtml = SanitizeInstructionsHtml(instructionsHtml);
+            int createdProductId = ProductDAL.CreateProductWithRecipe(userId, productName, yieldQuantity, yieldUnit.UnitName, sanitizedInstructionsHtml, recipeIngredients);
             if (createdProductId <= 0)
             {
                 throw new InvalidOperationException("לא ניתן ליצור את המוצר והמתכון.");
@@ -238,7 +272,7 @@ namespace CostWise.App_Code.BLL
             CostCalculationBLL.CalculateAndSaveProductCost(userId, createdProductId);
             return createdProductId;
         }
-        public static void UpdateProductWithRecipe(int userId, int productId, string productName, decimal yieldQuantity, int yieldUnitId, List<RecipeIngredientInput> recipeIngredients)
+        public static void UpdateProductWithRecipe(int userId, int productId, string productName, decimal yieldQuantity, int yieldUnitId, string instructionsHtml, List<RecipeIngredientInput> recipeIngredients)
         {
             if (productId <= 0)
             {
@@ -253,7 +287,8 @@ namespace CostWise.App_Code.BLL
             }
             MeasurementUnit yieldUnit = ValidateProductWithRecipeInput(userId, productName, yieldQuantity, yieldUnitId, recipeIngredients, allowedInactiveIngredientIds);
             productName = productName.Trim();
-            bool updated = ProductDAL.UpdateProductWithRecipe(userId, productId, productName, yieldQuantity, yieldUnit.UnitName, recipeIngredients);
+            string sanitizedInstructionsHtml = SanitizeInstructionsHtml(instructionsHtml);
+            bool updated = ProductDAL.UpdateProductWithRecipe(userId, productId, productName, yieldQuantity, yieldUnit.UnitName, sanitizedInstructionsHtml, recipeIngredients);
             if (!updated)
             {
                 throw new InvalidOperationException("לא ניתן לעדכן את המוצר והמתכון.");
