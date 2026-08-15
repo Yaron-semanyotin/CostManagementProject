@@ -1,10 +1,54 @@
 ﻿using CostWise.App_Code.BLL;
 using System;
 using System.IO;
+using System.Web.Security;
+
 namespace CostWise
 {
     public partial class Site : System.Web.UI.MasterPage
     {
+        protected override void OnInit(EventArgs e)
+        {
+            base.OnInit(e);
+            RestoreSessionFromAuthenticationCookie();
+        }
+        private void RestoreSessionFromAuthenticationCookie()
+        {
+            bool hasCompleteSession =
+                Session["UserId"] is int
+                &&
+                Session["BusinessId"] is int
+                &&
+                Session["UserName"] is string;
+            if (hasCompleteSession)
+            {
+                return;
+            }
+            FormsIdentity formsIdentity = Context.User?.Identity as FormsIdentity;
+            if (formsIdentity == null || !formsIdentity.IsAuthenticated)
+            {
+                return;
+            }
+            try
+            {
+                User user = AuthenticationBLL.GetUserForAuthenticatedIdentity(formsIdentity.Name);
+
+                if (user == null)
+                {
+                    Session.Clear();
+                    FormsAuthentication.SignOut();
+                    return;
+                }
+                Session["UserId"] = user.UserId;
+                Session["BusinessId"] = user.BusinessId;
+                Session["UserName"] = user.Username;
+            }
+            catch (Exception)
+            {
+                Session.Clear();
+                FormsAuthentication.SignOut();
+            }
+        }
         protected void Page_Load(object sender, EventArgs e)
         {
             if (Session["UserId"] == null || Session["BusinessId"] == null || Session["UserName"] == null)
@@ -71,6 +115,7 @@ namespace CostWise
         }
         private void RedirectToLogin()
         {
+            FormsAuthentication.SignOut();
             Session.Clear();
             Session.Abandon();
             Response.Redirect("~/Login.aspx", false);

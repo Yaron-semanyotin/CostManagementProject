@@ -36,5 +36,25 @@ namespace CostWise.App_Code.BLL
             user.PasswordHash = null;
             return user;
         }
+        public static User GetUserForAuthenticatedIdentity(string authenticatedUsername)
+        {
+            authenticatedUsername = authenticatedUsername?.Trim();
+
+            if (string.IsNullOrWhiteSpace(authenticatedUsername) || authenticatedUsername.Length > 50)
+            {
+                return null;
+            }
+
+            User user = AuthenticationDAL.GetUserByUsername(authenticatedUsername);
+
+            if (user == null)
+            {
+                return null;
+            }
+
+            user.PasswordHash = null;
+
+            return user;
+        }
     }
 }

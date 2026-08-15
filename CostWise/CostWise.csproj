@@ -111,6 +111,7 @@
     <Content Include="BusinessProfile.aspx" />
     <Content Include="CalculationDetails.aspx" />
     <Content Include="CalculationHistory.aspx" />
+    <Content Include="Content\Site.css" />
     <Content Include="Dashboard.aspx" />
     <Content Include="DatabaseConnectionTest.aspx" />
     <Content Include="Global.asax" />
@@ -123,6 +124,7 @@
     <Content Include="Recipe.aspx" />
     <Content Include="Register.aspx" />
     <Content Include="Scripts\calculation-history-chart.js" />
+    <Content Include="Scripts\login.js" />
     <Content Include="Scripts\product-builder.js" />
     <Content Include="Scripts\product-instructions-editor.js" />
     <Content Include="Scripts\product-recipe-details.js" />

@@ -1,0 +1,58 @@
+﻿html,
+body {
+    height: 100%;
+}
+
+body {
+    overflow: hidden;
+}
+
+#MainForm {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.app-header {
+    flex: 0 0 auto;
+    z-index: 1030;
+}
+
+.app-layout {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.app-layout-row {
+    height: 100%;
+    min-height: 0;
+    flex-wrap: nowrap;
+}
+
+.app-sidebar {
+    height: 100%;
+    overflow: hidden;
+}
+
+.app-content {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+@media (max-width: 767.98px) {
+    .app-layout-row {
+        flex-direction: column;
+    }
+
+    .app-sidebar {
+        height: auto;
+        flex: 0 0 auto;
+    }
+
+    .app-content {
+        height: auto;
+        flex: 1 1 auto;
+    }
+}
