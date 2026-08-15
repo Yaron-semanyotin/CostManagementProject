@@ -58,45 +58,7 @@ namespace CostWise.App_Code.DAL
             }
             return products;
         }
-        public static int CreateProduct(int userId, string productName, decimal yieldQuantity, string yieldUnitLabel)
-        {
-            const string query = @"INSERT INTO dbo.T_Products
-            (
-                BusinessId,
-                ProductName,
-                YieldQuantity,
-                YieldUnitLabel
-            )
-            OUTPUT INSERTED.ProductId
-            SELECT
-                u.BusinessId,
-                @ProductName,
-                @YieldQuantity,
-                @YieldUnitLabel
-            FROM dbo.T_Users AS u
-            WHERE u.UserId = @UserId;";
-
-            using (SqlConnection connection = DatabaseHelper.GetConnection())
-            {
-                using (SqlCommand command = new SqlCommand(query, connection))
-                {
-                    command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
-                    command.Parameters.Add("@ProductName", SqlDbType.NVarChar, 150).Value = productName;
-                    SqlParameter yieldQuantityParameter = command.Parameters.Add("@YieldQuantity", SqlDbType.Decimal);
-                    yieldQuantityParameter.Precision = 18;
-                    yieldQuantityParameter.Scale = 6;
-                    yieldQuantityParameter.Value = yieldQuantity;
-                    command.Parameters.Add("@YieldUnitLabel", SqlDbType.NVarChar, 50).Value = yieldUnitLabel;
-                    connection.Open();
-                    object result = command.ExecuteScalar();
-                    if (result == null || result == DBNull.Value)
-                    {
-                        return 0;
-                    }
-                    return Convert.ToInt32(result);
-                }
-            }
-        }
+        
         public static int CreateProductWithRecipe(int userId, string productName, decimal yieldQuantity,
     string yieldUnitLabel, string instructionsHtml, List<RecipeIngredientInput> recipeIngredients)
         {

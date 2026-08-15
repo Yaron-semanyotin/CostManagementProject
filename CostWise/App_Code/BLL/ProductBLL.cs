@@ -243,50 +243,7 @@ namespace CostWise.App_Code.BLL
             List<Product> products = GetProductsForUser(userId);
             return products.FindAll(product => !product.IsActive);
         }
-        public static int CreateProduct(int userId, string productName, decimal yieldQuantity, int yieldUnitId)
-        {
-            if (userId <= 0)
-            {
-                throw new ArgumentException("זהות המשתמש אינה תקינה.");
-            }
-            if (string.IsNullOrWhiteSpace(productName))
-            {
-                throw new ArgumentException("יש להזין שם מוצר.");
-            }
-            productName = productName.Trim();
-            if (productName.Length > 150)
-            {
-                throw new ArgumentException("שם המוצר יכול להכיל עד 150 תווים.");
-            }
-            if (yieldQuantity <= 0)
-            {
-                throw new ArgumentException("כמות התוצר חייבת להיות גדולה מאפס.");
-            }
-            if (yieldQuantity > 999999999999.999999m)
-            {
-                throw new ArgumentException("כמות התוצר גדולה מדי.");
-            }
-            if (decimal.Round(yieldQuantity, 6) != yieldQuantity)
-            {
-                throw new ArgumentException("כמות התוצר יכולה להכיל עד 6 ספרות אחרי הנקודה.");
-            }
-            if (yieldUnitId <= 0)
-            {
-                throw new ArgumentException("יש לבחור יחידת תוצר.");
-            }
-            List<MeasurementUnit> availableUnits = MeasurementUnitBLL.GetAvailableUnits(userId);
-            MeasurementUnit yieldUnit = availableUnits.Find(unit => unit.MeasurementUnitId == yieldUnitId);
-            if (yieldUnit == null)
-            {
-                throw new ArgumentException("יחידת התוצר שנבחרה אינה זמינה לעסק.");
-            }
-            int createdProductId = ProductDAL.CreateProduct(userId, productName, yieldQuantity, yieldUnit.UnitName);
-            if (createdProductId <= 0)
-            {
-                throw new InvalidOperationException("לא ניתן להוסיף את המוצר עבור המשתמש הנוכחי.");
-            }
-            return createdProductId;
-        }
+        
         public static int CreateProductWithRecipe(int userId, string productName, decimal yieldQuantity, int yieldUnitId, string instructionsHtml, List<RecipeIngredientInput> recipeIngredients)
         {
             MeasurementUnit yieldUnit = ValidateProductWithRecipeInput(userId, productName, yieldQuantity, yieldUnitId, recipeIngredients);
