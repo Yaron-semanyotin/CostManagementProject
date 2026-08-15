@@ -66,7 +66,9 @@ namespace CostWise.Controllers
             {
                 List<Ingredient> ingredients = ProductBLL.GetIngredientsForProductBuilder(userId, productId);
                 List<MeasurementUnit> measurementUnits = MeasurementUnitBLL.GetAvailableUnits(userId);
+                Business business = BusinessBLL.GetBusinessForUser(userId);
                 ProductBuilderDataDto response = new ProductBuilderDataDto();
+                response.DefaultRecipeMeasurementUnitId = business.DefaultRecipeMeasurementUnitId;
                 response.Ingredients = new List<IngredientAutocompleteDto>();
                 response.MeasurementUnits = new List<MeasurementUnitAutocompleteDto>();
                 foreach (Ingredient ingredient in ingredients)

@@ -6,6 +6,7 @@ namespace CostWise.Models
     {
         public List<IngredientAutocompleteDto> Ingredients { get; set; }
         public List<MeasurementUnitAutocompleteDto> MeasurementUnits { get; set; }
+        public int? DefaultRecipeMeasurementUnitId { get; set; }
     }
 
     public class IngredientAutocompleteDto

@@ -44,7 +44,7 @@
             ID="ProductHistoryRepeater"
             runat="server">
 
-            <itemtemplate>
+            <ItemTemplate>
                 <div class="card shadow-sm mb-3">
                     <div class="card-header p-0">
                         <button
@@ -71,24 +71,26 @@
                                     runat="server"
                                     DataSource='<%# Eval("Calculations") %>'>
 
-                                    <headertemplate>
+                                    <HeaderTemplate>
                                         <table class="table table-striped align-middle mb-0">
                                             <thead>
                                                 <tr>
                                                     <th scope="col">שם המוצר</th>
-                                                    <th scope="col">עלות כוללת</th>
+                                                    <th scope="col">עלות לפני מע״מ</th>
+                                                    <th scope="col">עלות אחרי מע״מ</th>
                                                     <th scope="col">עלות ליחידת תוצר</th>
                                                     <th scope="col">תקופת העלות</th>
                                                     <th scope="col">פרטים</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                    </headertemplate>
+                                    </HeaderTemplate>
 
-                                    <itemtemplate>
+                                    <ItemTemplate>
                                         <tr>
                                             <td><%#: Eval("ProductNameSnapshot") %></td>
                                             <td><%#: FormatCost(Eval("TotalIngredientCostSnapshot")) %></td>
+                                            <td><%#: FormatCost(Eval("TotalCostIncludingVat")) %></td>
                                             <td><%#: FormatCost(Eval("CostPerYieldUnitSnapshot")) %></td>
                                             <td><%#: FormatHistoryPeriod(Eval("CalculatedAtUtc"),Eval("ValidUntilUtc")) %></td>
                                             <td>
@@ -100,9 +102,9 @@
                                         <asp:Repeater ID="InlineCalculationDetailsRepeater" runat="server"
                                             DataSource='<%# GetInlineCalculationDetails(Eval("CostCalculationId")) %>'>
 
-                                            <itemtemplate>
+                                            <ItemTemplate>
                                                 <tr>
-                                                    <td colspan="5">
+                                                    <td colspan="6">
                                                         <div class="border rounded-3 bg-light p-3 my-2">
                                                             <h4 class="h6 mb-3">פרטי חישוב היסטורי:<%#: Eval("Calculation.ProductNameSnapshot") %>
                                                             </h4>
@@ -157,9 +159,9 @@
                                                                     AutoGenerateColumns="false" CssClass="table table-striped align-middle mb-0" GridLines="None"
                                                                     UseAccessibleHeader="true" EmptyDataText="לא נמצאו רכיבים בחישוב">
 
-                                                                    <headerstyle cssclass="table-light" />
+                                                                    <HeaderStyle CssClass="table-light" />
 
-                                                                    <columns>
+                                                                    <Columns>
                                                                         <asp:BoundField DataField="IngredientNameSnapshot" HeaderText="רכיב" />
                                                                         <asp:BoundField DataField="RecipeQuantitySnapshot" HeaderText="כמות במתכון" DataFormatString="{0:0.######}" HtmlEncode="false" />
                                                                         <asp:BoundField DataField="RecipeUnitNameSnapshot" HeaderText="יחידת מידה" />
@@ -167,7 +169,7 @@
                                                                         <asp:BoundField DataField="PackageQuantitySnapshot" HeaderText="כמות באריזה" DataFormatString="{0:0.######}" HtmlEncode="false" />
                                                                         <asp:BoundField DataField="PackageUnitNameSnapshot" HeaderText="יחידת אריזה" />
                                                                         <asp:BoundField DataField="IngredientCostSnapshot" HeaderText="עלות הרכיב במוצר" DataFormatString="{0:N2} ₪" HtmlEncode="false" />
-                                                                    </columns>
+                                                                    </Columns>
                                                                 </asp:GridView>
                                                             </div>
                                                             <asp:Panel ID="FirstCalculationMessagePanel" runat="server" CssClass="alert alert-secondary mt-3 mb-0" Visible='<%# Eval("PreviousCalculation") == null %>'>
@@ -186,11 +188,11 @@
 
                                                                 <asp:Repeater ID="CalculationChangeReasonsRepeater" runat="server" DataSource='<%# Eval("ChangeReasons") %>' Visible='<%# HasCalculationChangeReasons(Eval("ChangeReasons")) %>'>
 
-                                                                    <headertemplate>
+                                                                    <HeaderTemplate>
                                                                         <div class="list-group">
-                                                                    </headertemplate>
+                                                                    </HeaderTemplate>
 
-                                                                    <itemtemplate>
+                                                                    <ItemTemplate>
                                                                         <div class="list-group-item">
                                                                             <div class="d-flex flex-wrap justify-content-between gap-2">
                                                                                 <strong>
@@ -206,96 +208,96 @@
                                                                                 <%#: FormatCalculationChangeReason(Container.DataItem) %>
                                                                             </div>
                                                                         </div>
-                                                                    </itemtemplate>
+                                                                    </ItemTemplate>
 
-                                                                    <footertemplate>
+                                                                    <FooterTemplate>
+                                                                        </div>
+                                                                    </FooterTemplate>
+                                                                </asp:Repeater>
+
+                                                                <asp:Panel ID="NoCalculationChangeReasonsPanel" runat="server" CssClass="alert alert-light border mb-0"
+                                                                    Visible='<%# !HasCalculationChangeReasons(Eval("ChangeReasons")) %>'>
+                                                                    לא זוהה שינוי בנתוני הרכיבים לעומת החישוב הקודם.
+                                                                </asp:Panel>
+                                                            </asp:Panel>
                                                         </div>
-                                            </FooterTemplate>
-                                        </asp:Repeater>
-
-                                        <asp:Panel ID="NoCalculationChangeReasonsPanel" runat="server" CssClass="alert alert-light border mb-0"
-                                            Visible='<%# !HasCalculationChangeReasons(Eval("ChangeReasons")) %>'>
-                                            לא זוהה שינוי בנתוני הרכיבים לעומת החישוב הקודם.
-                                        </asp:Panel>
-                                </asp:Panel>
-                            </div>
-                </td>
+                                                    </td>
                                                 </tr>
-            </itemtemplate>
-        </asp:Repeater>
-        </itemtemplate>
+                                            </ItemTemplate>
+                                        </asp:Repeater>
+                                    </ItemTemplate>
 
-                                    <footertemplate>
+                                    <FooterTemplate>
                                         </tbody>
                                         </table>
-                                    </footertemplate>
-        </asp:Repeater>
-    </div>
-    <section class="mt-4" aria-labelledby='<%# "productCostChartHeading"+ Eval("ProductId") %>'>
+                                    </FooterTemplate>
+                                </asp:Repeater>
+                            </div>
+                            <section class="mt-4" aria-labelledby='<%# "productCostChartHeading"+ Eval("ProductId") %>'>
 
-        <h4 id='<%# "productCostChartHeading"+ Eval("ProductId") %>'
-            class="h6 mb-3">מגמת העלות הכוללת:<%#: Eval("ProductName") %>
-        </h4>
+                                <h4 id='<%# "productCostChartHeading"+ Eval("ProductId") %>'
+                                    class="h6 mb-3">מגמת העלות הכוללת:<%#: Eval("ProductName") %>
+                                </h4>
 
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-            <strong class="fs-5">
-                <%#: FormatCost(Eval("LatestTotalCost")) %>
-            </strong>
+                                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                                    <strong class="fs-5">
+                                        <%#: FormatCost(Eval("LatestTotalCost")) %>
+                                    </strong>
 
-            <span class='<%# "fw-semibold " +GetTrendCssClass(Eval("PeriodChangePercentage")) %>'><%#: FormatTrendChange(Eval("PeriodChangePercentage")) %>
-            </span>
-        </div>
+                                    <span class='<%# "fw-semibold " +GetTrendCssClass(Eval("PeriodChangePercentage")) %>'><%#: FormatTrendChange(Eval("PeriodChangePercentage")) %>
+                                    </span>
+                                </div>
 
-        <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="בחירת טווח זמן לגרף">
+                                <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="בחירת טווח זמן לגרף">
 
-            <asp:LinkButton ID="Last7DaysButton" runat="server" CssClass="btn btn-sm btn-outline-secondary"
-                Text="7 ימים" CommandName='<%# Convert.ToString(Eval("ProductId")) %>' CommandArgument="7d"
-                CausesValidation="false" OnCommand="QuickDateRangeButton_Command" />
+                                    <asp:LinkButton ID="Last7DaysButton" runat="server" CssClass="btn btn-sm btn-outline-secondary"
+                                        Text="7 ימים" CommandName='<%# Convert.ToString(Eval("ProductId")) %>' CommandArgument="7d"
+                                        CausesValidation="false" OnCommand="QuickDateRangeButton_Command" />
 
-            <asp:LinkButton ID="Last30DaysButton" runat="server" CssClass="btn btn-sm btn-outline-secondary"
-                Text="30 ימים" CommandName='<%# Convert.ToString(Eval("ProductId")) %>' CommandArgument="30d"
-                CausesValidation="false" OnCommand="QuickDateRangeButton_Command" />
+                                    <asp:LinkButton ID="Last30DaysButton" runat="server" CssClass="btn btn-sm btn-outline-secondary"
+                                        Text="30 ימים" CommandName='<%# Convert.ToString(Eval("ProductId")) %>' CommandArgument="30d"
+                                        CausesValidation="false" OnCommand="QuickDateRangeButton_Command" />
 
-            <asp:LinkButton ID="Last3MonthsButton" runat="server" CssClass="btn btn-sm btn-outline-secondary"
-                Text="3 חודשים" CommandName='<%# Convert.ToString(Eval("ProductId")) %>' CommandArgument="3m"
-                CausesValidation="false" OnCommand="QuickDateRangeButton_Command" />
+                                    <asp:LinkButton ID="Last3MonthsButton" runat="server" CssClass="btn btn-sm btn-outline-secondary"
+                                        Text="3 חודשים" CommandName='<%# Convert.ToString(Eval("ProductId")) %>' CommandArgument="3m"
+                                        CausesValidation="false" OnCommand="QuickDateRangeButton_Command" />
 
-            <asp:LinkButton ID="Last6MonthsButton" runat="server" CssClass="btn btn-sm btn-outline-secondary"
-                Text="6 חודשים" CommandName='<%# Convert.ToString(Eval("ProductId")) %>' CommandArgument="6m"
-                CausesValidation="false" OnCommand="QuickDateRangeButton_Command" />
+                                    <asp:LinkButton ID="Last6MonthsButton" runat="server" CssClass="btn btn-sm btn-outline-secondary"
+                                        Text="6 חודשים" CommandName='<%# Convert.ToString(Eval("ProductId")) %>' CommandArgument="6m"
+                                        CausesValidation="false" OnCommand="QuickDateRangeButton_Command" />
 
-            <asp:LinkButton ID="LastYearButton" runat="server" CssClass="btn btn-sm btn-outline-secondary"
-                Text="שנה" CommandName='<%# Convert.ToString(Eval("ProductId")) %>' CommandArgument="1y"
-                CausesValidation="false" OnCommand="QuickDateRangeButton_Command" />
+                                    <asp:LinkButton ID="LastYearButton" runat="server" CssClass="btn btn-sm btn-outline-secondary"
+                                        Text="שנה" CommandName='<%# Convert.ToString(Eval("ProductId")) %>' CommandArgument="1y"
+                                        CausesValidation="false" OnCommand="QuickDateRangeButton_Command" />
 
-            <asp:LinkButton ID="AllHistoryButton" runat="server" CssClass="btn btn-sm btn-outline-secondary"
-                Text="הכל" CommandName='<%# Convert.ToString(Eval("ProductId")) %>' CommandArgument="all"
-                CausesValidation="false" OnCommand="QuickDateRangeButton_Command" />
+                                    <asp:LinkButton ID="AllHistoryButton" runat="server" CssClass="btn btn-sm btn-outline-secondary"
+                                        Text="הכל" CommandName='<%# Convert.ToString(Eval("ProductId")) %>' CommandArgument="all"
+                                        CausesValidation="false" OnCommand="QuickDateRangeButton_Command" />
 
-        </div>
+                                </div>
 
-        <div class="product-cost-point-comparison border rounded p-3 mb-3" role="status" aria-live="polite">
+                                <div class="product-cost-point-comparison border rounded p-3 mb-3" role="status" aria-live="polite">
 
-            <span class="product-cost-point-comparison-text text-secondary">ניתן לבחור בין שתי נקודות בגרף כדי להשוות ביניהן.
-            </span>
+                                    <span class="product-cost-point-comparison-text text-secondary">ניתן לבחור בין שתי נקודות בגרף כדי להשוות ביניהן.
+                                    </span>
 
-            <strong class="product-cost-point-comparison-result me-2"></strong>
-        </div>
+                                    <strong class="product-cost-point-comparison-result me-2"></strong>
+                                </div>
 
-        <input type="hidden" class="product-cost-chart-data"
-            value='<%# System.Web.HttpUtility.HtmlAttributeEncode(GetProductCostChartDataJson(Eval("Calculations"))) %>' />
+                                <input type="hidden" class="product-cost-chart-data"
+                                    value='<%# System.Web.HttpUtility.HtmlAttributeEncode(GetProductCostChartDataJson(Eval("Calculations"))) %>' />
 
-        <div class="product-cost-chart-container" style="position: relative; height: 20rem;">
+                                <div class="product-cost-chart-container" style="position: relative; height: 20rem;">
 
-            <canvas class="product-cost-history-chart" role="img"
-                aria-label='<%# System.Web.HttpUtility.HtmlAttributeEncode("גרף היסטוריית העלות של "+ Convert.ToString(Eval("ProductName"))) %>'
-                data-product-name='<%# System.Web.HttpUtility.HtmlAttributeEncode(Convert.ToString(Eval("ProductName"))) %>'></canvas>
-        </div>
-    </section>
-    </div>
+                                    <canvas class="product-cost-history-chart" role="img"
+                                        aria-label='<%# System.Web.HttpUtility.HtmlAttributeEncode("גרף היסטוריית העלות של "+ Convert.ToString(Eval("ProductName"))) %>'
+                                        data-product-name='<%# System.Web.HttpUtility.HtmlAttributeEncode(Convert.ToString(Eval("ProductName"))) %>'></canvas>
+                                </div>
+                            </section>
+                        </div>
                     </div>
                 </div>
-            </itemtemplate>
+            </ItemTemplate>
         </asp:Repeater>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>

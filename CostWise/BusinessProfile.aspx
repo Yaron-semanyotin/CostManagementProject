@@ -45,6 +45,66 @@
 
                 </asp:Panel>
                 <hr class="my-4" />
+                <section aria-labelledby="BusinessSettingsHeading">
+                    <h3 id="BusinessSettingsHeading" class="h5">הגדרות מוצרים וחישובים
+    </h3>
+
+                    <p class="text-secondary">
+                        הגדר כיצד יוצגו יחידות המידה ומהו שיעור המע״מ של העסק.
+   
+                    </p>
+
+                    <asp:Panel ID="BusinessSettingsPanel" runat="server">
+
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input id="ShowYieldUnitSelectionSwitch" runat="server" clientidmode="Static"
+                                        type="checkbox" class="form-check-input" role="switch" />
+
+                                    <label class="form-check-label" for="ShowYieldUnitSelectionSwitch">
+                                        הצג בחירת יחידת תוצר בעת יצירה ועריכת מוצר
+                   
+                                    </label>
+                                </div>
+
+                                <div class="form-text">
+                                    כאשר האפשרות כבויה, המערכת תשתמש אוטומטית ביחידה.
+               
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-lg-6">
+                                <asp:Label ID="DefaultRecipeMeasurementUnitLabel" runat="server"
+                                    AssociatedControlID="DefaultRecipeMeasurementUnitDropDownList" CssClass="form-label"
+                                    Text="יחידת ברירת מחדל לרכיבי המתכון" />
+
+                                <asp:DropDownList ID="DefaultRecipeMeasurementUnitDropDownList" runat="server" CssClass="form-select">
+
+                                    <asp:ListItem Text="ללא יחידת ברירת מחדל" Value="" />
+                                </asp:DropDownList>
+
+                                <div class="form-text">
+                                    היחידה תיבחר אוטומטית בכל שורת מתכון חדשה.
+               
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-lg-6">
+                                <asp:Label ID="VatRatePercentLabel" runat="server" AssociatedControlID="VatRatePercentTextBox"
+                                    CssClass="form-label" Text="שיעור מע״מ באחוזים" />
+
+                                <asp:TextBox ID="VatRatePercentTextBox" runat="server" CssClass="form-control" MaxLength="6" inputmode="decimal" />
+
+                                <asp:RequiredFieldValidator ID="VatRatePercentRequiredValidator" runat="server" ControlToValidate="VatRatePercentTextBox"
+                                    ValidationGroup="BusinessProfile" ErrorMessage="שיעור המע״מ הוא שדה חובה." CssClass="text-danger" Display="Dynamic" />
+                            </div>
+                        </div>
+
+                    </asp:Panel>
+                </section>
+
+                <hr class="my-4" />
 
                 <section aria-labelledby="BusinessLogoHeading">
                     <h3 id="BusinessLogoHeading" class="h5">לוגו העסק </h3>
@@ -65,11 +125,6 @@
                         </div>
                     </div>
 
-                    <div class="mt-3">
-                        <asp:Button ID="UploadLogoButton" runat="server" Text="העלה לוגו" CssClass="btn btn-outline-primary" CausesValidation="false" OnClick="UploadLogoButton_Click" />
-                    </div>
-
-                    <asp:Label ID="LogoResultLabel" runat="server" CssClass="d-block mt-3" role="status" />
                 </section>
             </div>
         </div>

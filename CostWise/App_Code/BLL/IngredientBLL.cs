@@ -142,6 +142,12 @@ namespace CostWise.App_Code.BLL
             {
                 throw new ArgumentException("יחידת המידה שנבחרה אינה זמינה לעסק.");
             }
+            Ingredient currentIngredient = GetActiveIngredientsForUser(userId).Find(ingredient => ingredient.IngredientId == ingredientId);
+            if (currentIngredient == null)
+            {
+                throw new InvalidOperationException("הרכיב לא נמצא, אינו פעיל או אינו שייך לעסק שלך.");
+            }
+            bool costDataChanged = currentIngredient.PackagePrice != packagePrice || currentIngredient.PackageQuantity != packageQuantity || currentIngredient.PackageUnitId != packageUnitId;
             Ingredient existingIngredient = IngredientDAL.GetIngredientByNameForUser(userId, ingredientName);
             if (existingIngredient != null && existingIngredient.IngredientId != ingredientId)
             {
@@ -151,6 +157,10 @@ namespace CostWise.App_Code.BLL
             if (!wasUpdated)
             {
                 throw new InvalidOperationException("לא ניתן לעדכן את הרכיב.");
+            }
+            if (costDataChanged)
+            {
+                CostCalculationBLL.RecalculateAndSaveProductCostsUsingIngredient(userId, ingredientId);
             }
         }
         public static string DeactivateIngredient(int userId, int ingredientId)

@@ -69,7 +69,35 @@ namespace CostWise
                     Session.Remove("ProductsMessage");
                 }
             }
+            LoadBusinessProductSettings();
             UpdateProductFormMode();
+        }
+        private void LoadBusinessProductSettings()
+        {
+            try
+            {
+                int userId = (int)Session["UserId"];
+                Business business = BusinessBLL.GetBusinessForUser(userId);
+                YieldUnitSelectionPanel.Visible = business.ShowYieldUnitSelection;
+            }
+            catch (ArgumentException)
+            {
+                YieldUnitSelectionPanel.Visible = false;
+                AddProductButton.Enabled = false;
+                ResultLabel.Text = "לא ניתן לטעון את הגדרות המוצרים.";
+            }
+            catch (InvalidOperationException)
+            {
+                YieldUnitSelectionPanel.Visible = false;
+                AddProductButton.Enabled = false;
+                ResultLabel.Text = "לא ניתן לטעון את הגדרות המוצרים.";
+            }
+            catch (Exception)
+            {
+                YieldUnitSelectionPanel.Visible = false;
+                AddProductButton.Enabled = false;
+                ResultLabel.Text = "אירעה שגיאה בעת טעינת הגדרות המוצרים.";
+            }
         }
         private void LoadProducts()
         {
@@ -118,7 +146,9 @@ namespace CostWise
             RecipeYieldQuantityLabel.Text = calculation.YieldQuantitySnapshot.ToString("0.######");
             RecipeYieldUnitLabel.Text = Server.HtmlEncode(calculation.YieldUnitLabelSnapshot);
             RecipeTotalCostLabel.Text = calculation.TotalIngredientCostSnapshot.ToString("N2") + " ₪";
+            RecipeTotalCostIncludingVatLabel.Text = calculation.TotalCostIncludingVat.ToString("N2") + " ₪";
             RecipeCostPerYieldUnitLabel.Text = calculation.CostPerYieldUnitSnapshot.ToString("N2") + " ₪";
+            RecipeCostPerYieldUnitIncludingVatLabel.Text = calculation.CostPerYieldUnitIncludingVat.ToString("N2") + " ₪";
             ProductRecipeItemsGrid.DataSource = result.Items;
             ProductRecipeItemsGrid.DataBind();
             ProductRecipeDetailsPanel.Visible = true;
@@ -191,8 +221,8 @@ namespace CostWise
                 ResultLabel.Text = "יש להזין כמות תוצר מספרית.";
                 return;
             }
-            int yieldUnitId;
-            if (!int.TryParse(YieldUnitDropDownList.SelectedValue, out yieldUnitId))
+            int yieldUnitId = 0;
+            if (YieldUnitSelectionPanel.Visible && !int.TryParse(YieldUnitDropDownList.SelectedValue, out yieldUnitId))
             {
                 ResultLabel.Text = "יש לבחור יחידת תוצר.";
                 return;

@@ -10,6 +10,7 @@ namespace CostWise.App_Code.BLL
         public decimal YieldQuantity { get; set; }
         public string YieldUnitLabel { get; set; }
         public decimal? CurrentTotalCost { get; set; }
+        public decimal? CurrentTotalCostIncludingVat { get; set; }
         public string InstructionsHtml { get; set; }
         public string ImagePath { get; set; }
         public bool IsActive { get; set; }

@@ -200,7 +200,7 @@ namespace CostWise.App_Code.BLL
                 SortOrderSnapshot = recipeIngredient.SortOrder
             };
         }
-        private static CostCalculation CreateCalculationSummary(Product product, decimal totalIngredientCost)
+        private static CostCalculation CreateCalculationSummary(Product product, decimal totalIngredientCost, decimal vatRatePercent)
         {
             if (product == null)
             {
@@ -219,6 +219,10 @@ namespace CostWise.App_Code.BLL
                 throw new ArgumentException("העלות הכוללת אינה יכולה להיות שלילית.");
             }
             decimal costPerYieldUnit = totalIngredientCost / product.YieldQuantity;
+            if (vatRatePercent < 0m || vatRatePercent > 100m)
+            {
+                throw new ArgumentException("שיעור המע״מ חייב להיות בין 0 ל־100.");
+            }
             return new CostCalculation
             {
                 BusinessId = product.BusinessId,
@@ -228,12 +232,14 @@ namespace CostWise.App_Code.BLL
                 YieldUnitLabelSnapshot = product.YieldUnitLabel,
                 TotalIngredientCostSnapshot = totalIngredientCost,
                 CostPerYieldUnitSnapshot = costPerYieldUnit,
+                VatRatePercentSnapshot = vatRatePercent,
                 CalculatedAtUtc = DateTime.UtcNow
             };
         }
         public static CostCalculationResult CalculateProductCost(int userId, int productId)
         {
             Product product = GetProductForCalculation(userId, productId);
+            Business business = BusinessBLL.GetBusinessForUser(userId);
             List<RecipeIngredient> recipeIngredients = GetRecipeForCalculation(userId, productId);
             List<Ingredient> ingredients = IngredientBLL.GetIngredientsForUser(userId);
             List<MeasurementUnit> availableUnits = MeasurementUnitBLL.GetAvailableUnits(userId);
@@ -249,7 +255,7 @@ namespace CostWise.App_Code.BLL
                 calculationItems.Add(calculationItem);
                 totalIngredientCost += calculationItem.IngredientCostSnapshot;
             }
-            CostCalculation calculation = CreateCalculationSummary(product, totalIngredientCost);
+            CostCalculation calculation = CreateCalculationSummary(product, totalIngredientCost, business.VatRatePercent);
             return new CostCalculationResult { Calculation = calculation, Items = calculationItems };
         }
         public static List<Product> GetActiveProductsWithCurrentCosts(int userId)
@@ -269,7 +275,10 @@ namespace CostWise.App_Code.BLL
                         product.CurrentTotalCost = null;
                         continue;
                     }
-                    product.CurrentTotalCost = result.Calculation.TotalIngredientCostSnapshot;
+                    decimal currentTotalCost = result.Calculation.TotalIngredientCostSnapshot;
+                    decimal vatMultiplier = 1m + result.Calculation.VatRatePercentSnapshot / 100m;
+                    product.CurrentTotalCost = currentTotalCost;
+                    product.CurrentTotalCostIncludingVat = currentTotalCost * vatMultiplier;
                 }
                 catch (ArgumentException)
                 {
@@ -286,6 +295,62 @@ namespace CostWise.App_Code.BLL
         {
             CostCalculationResult result = CalculateProductCost(userId, productId);
             return CostCalculationDAL.SaveCalculation(userId, result);
+        }
+        public static int RecalculateAndSaveActiveProductCosts(int userId)
+        {
+            if (userId <= 0)
+            {
+                throw new ArgumentException("זהות המשתמש אינה תקינה.");
+            }
+            List<Product> products = ProductBLL.GetActiveProductsForUser(userId);
+            int savedCalculationsCount = 0;
+            foreach (Product product in products)
+            {
+                try
+                {
+                    CalculateAndSaveProductCost(userId, product.ProductId);
+                    savedCalculationsCount++;
+                }
+                catch (ArgumentException)
+                {
+                    continue;
+                }
+                catch (InvalidOperationException)
+                {
+                    continue;
+                }
+            }
+            return savedCalculationsCount;
+        }
+        public static int RecalculateAndSaveProductCostsUsingIngredient(int userId, int ingredientId)
+        {
+            if (userId <= 0)
+            {
+                throw new ArgumentException("זהות המשתמש אינה תקינה.");
+            }
+            if (ingredientId <= 0)
+            {
+                throw new ArgumentException("מזהה הרכיב אינו תקין.");
+            }
+            List<int> productIds = ProductBLL.GetActiveProductIdsUsingIngredient(userId, ingredientId);
+            int savedCalculationsCount = 0;
+            foreach (int productId in productIds)
+            {
+                try
+                {
+                    CalculateAndSaveProductCost(userId, productId);
+                    savedCalculationsCount++;
+                }
+                catch (ArgumentException)
+                {
+                    continue;
+                }
+                catch (InvalidOperationException)
+                {
+                    continue;
+                }
+            }
+            return savedCalculationsCount;
         }
         public static List<CostCalculation> GetCalculationHistory(int userId)
         {

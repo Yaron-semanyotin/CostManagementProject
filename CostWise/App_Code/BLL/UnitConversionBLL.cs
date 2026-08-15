@@ -23,6 +23,18 @@ namespace CostWise.App_Code.BLL
             }
             return quantity * unit.ConversionFactorToBase;
         }
+        public static bool AreCompatibleUnits(MeasurementUnit sourceUnit, MeasurementUnit targetUnit)
+        {
+            if (sourceUnit == null || targetUnit == null)
+            {
+                return false;
+            }
+            bool sameFamily = string.Equals(sourceUnit.UnitFamily, targetUnit.UnitFamily, StringComparison.OrdinalIgnoreCase);
+            bool liquidMeasuredByWeight = string.Equals(sourceUnit.UnitFamily, "Volume", StringComparison.OrdinalIgnoreCase)
+                &&
+                string.Equals(targetUnit.UnitFamily, "Weight", StringComparison.OrdinalIgnoreCase);
+            return sameFamily || liquidMeasuredByWeight;
+        }
         public static void ValidateCompatibleUnits(MeasurementUnit sourceUnit, MeasurementUnit targetUnit)
         {
             if (sourceUnit == null)
@@ -33,7 +45,7 @@ namespace CostWise.App_Code.BLL
             {
                 throw new ArgumentNullException(nameof(targetUnit));
             }
-            if (!string.Equals(sourceUnit.UnitFamily, targetUnit.UnitFamily, StringComparison.OrdinalIgnoreCase))
+            if (!AreCompatibleUnits(sourceUnit, targetUnit))
             {
                 throw new ArgumentException("לא ניתן להמיר בין יחידות ממשפחות שונות.");
             }

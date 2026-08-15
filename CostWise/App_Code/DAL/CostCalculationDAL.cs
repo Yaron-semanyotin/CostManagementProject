@@ -18,6 +18,7 @@ namespace CostWise.App_Code.DAL
             YieldUnitLabelSnaphot,
             TotalIngredientCostSnapshot,
             CostPerYieldUnitSnapshot,
+            VatRatePercentSnapshot,
             CalculatedAtUtc
         )
         OUTPUT INSERTED.CostCalculationId
@@ -29,6 +30,7 @@ namespace CostWise.App_Code.DAL
             @YieldUnitLabelSnapshot,
             @TotalIngredientCostSnapshot,
             @CostPerYieldUnitSnapshot,
+            @VatRatePercentSnapshot,
             @CalculatedAtUtc
         FROM dbo.T_Users AS u
         INNER JOIN dbo.T_Products AS p
@@ -97,6 +99,7 @@ namespace CostWise.App_Code.DAL
                 AS YieldUnitLabelSnapshot,
             calculation.TotalIngredientCostSnapshot,
             calculation.CostPerYieldUnitSnapshot,
+            calculation.VatRatePercentSnapshot,
             calculation.CalculatedAtUtc
         FROM dbo.T_Users AS u
         INNER JOIN dbo.T_CostCalculations AS calculation
@@ -116,6 +119,7 @@ namespace CostWise.App_Code.DAL
                 AS YieldUnitLabelSnapshot,
             calculation.TotalIngredientCostSnapshot,
             calculation.CostPerYieldUnitSnapshot,
+            calculation.VatRatePercentSnapshot,
             calculation.CalculatedAtUtc
         FROM dbo.T_Users AS u
         INNER JOIN dbo.T_CostCalculations AS calculation
@@ -173,6 +177,7 @@ namespace CostWise.App_Code.DAL
                 YieldUnitLabelSnapshot = reader.GetString(reader.GetOrdinal("YieldUnitLabelSnapshot")),
                 TotalIngredientCostSnapshot = reader.GetDecimal(reader.GetOrdinal("TotalIngredientCostSnapshot")),
                 CostPerYieldUnitSnapshot = reader.GetDecimal(reader.GetOrdinal("CostPerYieldUnitSnapshot")),
+                VatRatePercentSnapshot = reader.GetDecimal(reader.GetOrdinal("VatRatePercentSnapshot")),
                 CalculatedAtUtc = reader.GetDateTime(reader.GetOrdinal("CalculatedAtUtc"))
             };
         }
@@ -305,6 +310,7 @@ namespace CostWise.App_Code.DAL
             command.Parameters.Add("@YieldUnitLabelSnapshot", SqlDbType.NVarChar, 50).Value = calculation.YieldUnitLabelSnapshot;
             AddDecimalParameter(command, "@TotalIngredientCostSnapshot", 28, 12, calculation.TotalIngredientCostSnapshot);
             AddDecimalParameter(command, "@CostPerYieldUnitSnapshot", 28, 12, calculation.CostPerYieldUnitSnapshot);
+            AddDecimalParameter(command, "@VatRatePercentSnapshot", 5, 2, calculation.VatRatePercentSnapshot);
             SqlParameter calculatedAtUtcParameter = command.Parameters.Add("@CalculatedAtUtc", SqlDbType.DateTime2);
             calculatedAtUtcParameter.Scale = 7;
             calculatedAtUtcParameter.Value = calculation.CalculatedAtUtc;

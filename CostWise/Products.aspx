@@ -37,7 +37,7 @@
                         <asp:TextBox ID="YieldQuantityTextBox" runat="server" CssClass="form-control" inputmode="decimal" />
                     </div>
 
-                    <div class="col-12 col-md-6 col-xl-3">
+                    <asp:Panel ID="YieldUnitSelectionPanel" runat="server" CssClass="col-12 col-md-6 col-xl-3">
                         <asp:Label ID="YieldUnitLabel" runat="server" AssociatedControlID="YieldUnitDropDownList" CssClass="form-label" Text="יחידת תוצר" />
 
                         <asp:DropDownList ID="YieldUnitDropDownList"
@@ -45,7 +45,7 @@
                             CssClass="form-select">
                             <asp:ListItem Text="בחר יחידת מידה" Value="" />
                         </asp:DropDownList>
-                    </div>
+                    </asp:Panel>
 
                     <div class="col-12 col-md-6 col-xl-2">
                         <div class="d-grid gap-2">
@@ -187,40 +187,46 @@
                         GridLines="None" UseAccessibleHeader="true" EmptyDataText="לא נמצאו מוצרים" DataKeyNames="ProductId"
                         OnRowEditing="ProductsGrid_RowEditing" OnRowDeleting="ProductsGrid_RowDeleting" OnRowCommand="ProductsGrid_RowCommand">
 
-                        <headerstyle cssclass="table-light" />
+                        <HeaderStyle CssClass="table-light" />
 
-                        <columns>
+                        <Columns>
                             <asp:BoundField DataField="ProductName" HeaderText="שם המוצר">
-                                <controlstyle cssclass="form-control form-control-sm" />
+                                <ControlStyle CssClass="form-control form-control-sm" />
                             </asp:BoundField>
 
                             <asp:BoundField DataField="YieldQuantity" HeaderText="כמות תוצר" DataFormatString="{0:0.######}" HtmlEncode="false">
-                                <controlstyle cssclass="form-control form-control-sm" />
+                                <ControlStyle CssClass="form-control form-control-sm" />
                             </asp:BoundField>
 
                             <asp:TemplateField HeaderText="יחידת תוצר">
-                                <itemtemplate>
+                                <ItemTemplate>
                                     <asp:Label ID="YieldUnitNameLabel" runat="server" Text='<%# Eval("YieldUnitLabel") %>' />
-                                </itemtemplate>
+                                </ItemTemplate>
                             </asp:TemplateField>
 
-                            <asp:TemplateField HeaderText="מחיר סופי">
-                                <itemtemplate>
+                            <asp:TemplateField HeaderText="מחיר לפני מע״מ">
+                                <ItemTemplate>
                                     <asp:Label ID="CurrentTotalCostLabel" runat="server"
                                         Text='<%# Eval("CurrentTotalCost") == null? "לא זמין": string.Format("{0:N2} ₪", Eval("CurrentTotalCost")) %>' />
-                                </itemtemplate>
+                                </ItemTemplate>
+                            </asp:TemplateField>
+
+                            <asp:TemplateField HeaderText="מחיר אחרי מע״מ">
+                                <ItemTemplate>
+                                    <asp:Label ID="CurrentTotalCostIncludingVatLabel" runat="server" Text='<%# Eval("CurrentTotalCostIncludingVat") == null ? "לא זמין" : string.Format("{0:N2} ₪", Eval("CurrentTotalCostIncludingVat")) %>' />
+                                </ItemTemplate>
                             </asp:TemplateField>
 
                             <asp:TemplateField HeaderText="מתכון">
-                                <itemtemplate>
+                                <ItemTemplate>
                                     <asp:LinkButton ID="OpenRecipeButton" runat="server" Text="פתח מתכון" CssClass="btn btn-outline-primary btn-sm"
                                         CommandName="OpenRecipe" CommandArgument='<%# Eval("ProductId") %>' CausesValidation="false" data-role="open-recipe"
                                         data-product-id='<%# Eval("ProductId") %>' aria-expanded="false" aria-controls="ProductRecipeDetailsPanel" />
-                                </itemtemplate>
+                                </ItemTemplate>
                             </asp:TemplateField>
                             <asp:CommandField HeaderText="פעולות" ShowEditButton="true" ShowDeleteButton="true"
                                 EditText="ערוך" DeleteText="מחק" />
-                        </columns>
+                        </Columns>
                     </asp:GridView>
                 </div>
                 <asp:Panel ID="ProductRecipeDetailsPanel" runat="server" ClientIDMode="Static" Visible="false" CssClass="border rounded-3 bg-light mt-4 p-3" role="region" aria-labelledby="RecipeDetailsHeading">
@@ -232,39 +238,41 @@
                     </h4>
 
                     <div class="row g-3 mb-3">
-                        <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="col-12 col-lg-4">
                             <div class="bg-white border rounded p-3 h-100">
-                                <span class="d-block text-secondary small">כמות תוצר
-                                </span>
-
-                                <asp:Label ID="RecipeYieldQuantityLabel" runat="server" CssClass="fw-semibold" />
+                                <span class="d-block text-secondary small">כמות תוצר</span>
+                                <div class="fw-semibold">
+                                    <asp:Label ID="RecipeYieldQuantityLabel" runat="server" />
+                                    <asp:Label ID="RecipeYieldUnitLabel" runat="server" CssClass="me-1" />
+                                </div>
                             </div>
                         </div>
 
-                        <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="col-12 col-lg-4">
                             <div class="bg-white border rounded p-3 h-100">
-                                <span class="d-block text-secondary small">יחידת תוצר
-                                </span>
-
-                                <asp:Label ID="RecipeYieldUnitLabel" runat="server" CssClass="fw-semibold" />
+                                <span class="d-block text-secondary small">עלות כוללת</span>
+                                <div>
+                                    <span class="text-secondary">לפני מע״מ:</span>
+                                    <asp:Label ID="RecipeTotalCostLabel" runat="server" CssClass="fw-semibold" />
+                                </div>
+                                <div>
+                                    <span class="text-secondary">אחרי מע״מ:</span>
+                                    <asp:Label ID="RecipeTotalCostIncludingVatLabel" runat="server" CssClass="fw-semibold" />
+                                </div>
                             </div>
                         </div>
 
-                        <div class="col-12 col-sm-6 col-xl-3">
+                        <div class="col-12 col-lg-4">
                             <div class="bg-white border rounded p-3 h-100">
-                                <span class="d-block text-secondary small">עלות כוללת
-                                </span>
-
-                                <asp:Label ID="RecipeTotalCostLabel" runat="server" CssClass="fw-semibold" />
-                            </div>
-                        </div>
-
-                        <div class="col-12 col-sm-6 col-xl-3">
-                            <div class="bg-white border rounded p-3 h-100">
-                                <span class="d-block text-secondary small">עלות ליחידת תוצר
-                                </span>
-
-                                <asp:Label ID="RecipeCostPerYieldUnitLabel" runat="server" CssClass="fw-semibold" />
+                                <span class="d-block text-secondary small">עלות ליחידת תוצר</span>
+                                <div>
+                                    <span class="text-secondary">לפני מע״מ:</span>
+                                    <asp:Label ID="RecipeCostPerYieldUnitLabel" runat="server" CssClass="fw-semibold" />
+                                </div>
+                                <div>
+                                    <span class="text-secondary">אחרי מע״מ:</span>
+                                    <asp:Label ID="RecipeCostPerYieldUnitIncludingVatLabel" runat="server" CssClass="fw-semibold" />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -276,9 +284,9 @@
                             CssClass="table table-striped table-hover align-middle mb-0" GridLines="None" UseAccessibleHeader="true"
                             EmptyDataText="לא נמצאו רכיבים במתכון.">
 
-                            <headerstyle cssclass="table-light" />
+                            <HeaderStyle CssClass="table-light" />
 
-                            <columns>
+                            <Columns>
                                 <asp:BoundField DataField="IngredientNameSnapshot" HeaderText="רכיב" />
 
                                 <asp:BoundField DataField="RecipeQuantitySnapshot" HeaderText="כמות במתכון" DataFormatString="{0:0.######}" HtmlEncode="false" />
@@ -288,7 +296,7 @@
                                 <asp:BoundField DataField="PackagePriceSnapshot" HeaderText="מחיר האריזה הנוכחי" DataFormatString="{0:N2} ₪" HtmlEncode="false" />
 
                                 <asp:BoundField DataField="IngredientCostSnapshot" HeaderText="מחיר לכמות" DataFormatString="{0:N2} ₪" HtmlEncode="false" />
-                            </columns>
+                            </Columns>
                         </asp:GridView>
                     </div>
                 </asp:Panel>
@@ -297,6 +305,6 @@
     </section>
     <script src="https://cdn.jsdelivr.net/npm/tinymce@8.8.2/tinymce.min.js" crossorigin="anonymous"></script>
     <script src="<%: ResolveUrl("~/Scripts/product-instructions-editor.js") %>?v=2"></script>
-    <script src="<%: ResolveUrl("~/Scripts/product-builder.js") %>?v=3"></script>
+    <script src="<%: ResolveUrl("~/Scripts/product-builder.js") %>?v=5"></script>
     <script src="<%: ResolveUrl("~/Scripts/product-recipe-details.js") %>"></script>
 </asp:Content>

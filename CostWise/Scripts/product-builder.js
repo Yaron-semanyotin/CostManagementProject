@@ -1,7 +1,7 @@
 ﻿(function () {
     "use strict";
 
-    var productBuilderCacheKey = "CostWise.ProductBuilderData.v2";
+    var productBuilderCacheKey = "CostWise.ProductBuilderData.v3";
     var productBuilderLoadPromise = null;
     var productBuilderData = null;
     var shouldClearProductBuilderCache = document.body !== null && document.body.getAttribute("data-clear-product-builder-cache") === "true";
@@ -273,6 +273,32 @@
         }
         return allRowsAreValid;
     }
+    function areUnitsCompatible(
+        packageUnit,
+        recipeUnit) {
+        if (packageUnit === null ||
+            recipeUnit === null) {
+            return false;
+        }
+
+        var packageFamily =
+            String(packageUnit.UnitFamily)
+                .toLowerCase();
+
+        var recipeFamily =
+            String(recipeUnit.UnitFamily)
+                .toLowerCase();
+
+        var sameFamily =
+            packageFamily === recipeFamily;
+
+        var liquidMeasuredByWeight =
+            packageFamily === "volume" &&
+            recipeFamily === "weight";
+
+        return sameFamily ||
+            liquidMeasuredByWeight;
+    }
     function validateRecipeUnits() {
         if (recipeIngredientRowsElement === null) {
             return false;
@@ -289,7 +315,7 @@
             var selectedIngredient = findIngredientById(ingredientId);
             var selectedUnit = findMeasurementUnitById(measurementUnitId);
             var packageUnit = selectedIngredient === null ? null : findMeasurementUnitById(Number(selectedIngredient.PackageUnitId));
-            var unitIsValid = selectedIngredient !== null && selectedUnit !== null && packageUnit !== null && selectedUnit.UnitFamily === packageUnit.UnitFamily;
+            var unitIsValid = areUnitsCompatible(packageUnit, selectedUnit);
             var errorMessage = unitIsValid ? "" : "יש לבחור יחידת מידה מתאימה לרכיב.";
             setFieldValidation(unitSelect, unitError, errorMessage);
             if (!unitIsValid) {
@@ -438,17 +464,17 @@
         }
         for (var index = 0; index < productBuilderData.MeasurementUnits.length; index += 1) {
             var measurementUnit = productBuilderData.MeasurementUnits[index];
-            if (!String(measurementUnit.UnitFamily).localeCompare(String(packageUnit.UnitFamily), "he-IL",
-                {
-                    sensitivity: "base"
-                })) {
+            if (areUnitsCompatible(packageUnit, measurementUnit)) {
                 var option = document.createElement("option");
                 option.value = String(measurementUnit.MeasurementUnitId);
                 option.textContent = measurementUnit.UnitName;
                 recipeUnit.appendChild(option);
             }
         }
-        recipeUnit.value = String(ingredient.PackageUnitId);
+        var defaultRecipeUnitId = Number(productBuilderData.DefaultRecipeMeasurementUnitId);
+        var defaultRecipeUnit = findMeasurementUnitById(defaultRecipeUnitId);
+        var selectedRecipeUnit = areUnitsCompatible(packageUnit, defaultRecipeUnit) ? defaultRecipeUnit : packageUnit;
+        recipeUnit.value = String(selectedRecipeUnit.MeasurementUnitId);
         recipeUnit.disabled = false;
     }
     function formatDecimalForDisplay(value) {

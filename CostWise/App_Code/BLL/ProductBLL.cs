@@ -38,9 +38,36 @@ namespace CostWise.App_Code.BLL
             }
             return sanitizedHtml;
         }
-        private static MeasurementUnit
-    ValidateProductWithRecipeInput(int userId, string productName, decimal yieldQuantity, int yieldUnitId,
-        List<RecipeIngredientInput> recipeIngredients, HashSet<int> allowedInactiveIngredientIds = null)
+        private static MeasurementUnit ResolveYieldUnitForProduct(int userId, int yieldUnitId, List<MeasurementUnit> availableUnits)
+        {
+            if (availableUnits == null)
+            {
+                throw new ArgumentNullException(nameof(availableUnits));
+            }
+            Business business = BusinessBLL.GetBusinessForUser(userId);
+            if (!business.ShowYieldUnitSelection)
+            {
+                MeasurementUnit systemQuantityUnit = availableUnits.Find(unit => !unit.BusinessId.HasValue
+                        && string.Equals(unit.UnitFamily, "Quantity", StringComparison.OrdinalIgnoreCase)
+                        && unit.ConversionFactorToBase == 1m);
+                if (systemQuantityUnit == null)
+                {
+                    throw new InvalidOperationException("יחידת התוצר המערכתית אינה זמינה.");
+                }
+                return systemQuantityUnit;
+            }
+            if (yieldUnitId <= 0)
+            {
+                throw new ArgumentException("יש לבחור יחידת תוצר.");
+            }
+            MeasurementUnit selectedYieldUnit = availableUnits.Find(unit => unit.MeasurementUnitId == yieldUnitId);
+            if (selectedYieldUnit == null)
+            {
+                throw new ArgumentException("יחידת התוצר שנבחרה אינה זמינה לעסק.");
+            }
+            return selectedYieldUnit;
+        }
+        private static MeasurementUnit ValidateProductWithRecipeInput(int userId, string productName, decimal yieldQuantity, int yieldUnitId, List<RecipeIngredientInput> recipeIngredients, HashSet<int> allowedInactiveIngredientIds = null)
         {
             if (userId <= 0)
             {
@@ -66,20 +93,12 @@ namespace CostWise.App_Code.BLL
             {
                 throw new ArgumentException("כמות התוצר יכולה להכיל עד 6 ספרות אחרי הנקודה.");
             }
-            if (yieldUnitId <= 0)
-            {
-                throw new ArgumentException("יש לבחור יחידת תוצר.");
-            }
             if (recipeIngredients == null || recipeIngredients.Count == 0)
             {
                 throw new ArgumentException("יש להוסיף לפחות רכיב אחד למתכון.");
             }
             List<MeasurementUnit> availableUnits = MeasurementUnitBLL.GetAvailableUnits(userId);
-            MeasurementUnit yieldUnit = availableUnits.Find(unit => unit.MeasurementUnitId == yieldUnitId);
-            if (yieldUnit == null)
-            {
-                throw new ArgumentException("יחידת התוצר שנבחרה אינה זמינה לעסק.");
-            }
+            MeasurementUnit yieldUnit = ResolveYieldUnitForProduct(userId, yieldUnitId, availableUnits);
             List<Ingredient> ingredients = IngredientBLL.GetIngredientsForUser(userId);
             HashSet<int> selectedIngredientIds = new HashSet<int>();
             foreach (RecipeIngredientInput recipeIngredient in recipeIngredients)
@@ -148,10 +167,7 @@ namespace CostWise.App_Code.BLL
                 {
                     throw new InvalidOperationException("יחידת האריזה של אחד הרכיבים אינה זמינה.");
                 }
-                if (!string.Equals(packageUnit.UnitFamily, recipeUnit.UnitFamily, StringComparison.OrdinalIgnoreCase))
-                {
-                    throw new ArgumentException("יחידת המידה של אחד הרכיבים אינה תואמת למשפחת יחידת האריזה שלו.");
-                }
+                UnitConversionBLL.ValidateCompatibleUnits(packageUnit, recipeUnit);
             }
             return yieldUnit;
         }
@@ -167,6 +183,18 @@ namespace CostWise.App_Code.BLL
         {
             List<Product> products = GetProductsForUser(userId);
             return products.FindAll(product => product.IsActive);
+        }
+        public static List<int> GetActiveProductIdsUsingIngredient(int userId, int ingredientId)
+        {
+            if (userId <= 0)
+            {
+                throw new ArgumentException("זהות המשתמש אינה תקינה.");
+            }
+            if (ingredientId <= 0)
+            {
+                throw new ArgumentException("מזהה הרכיב אינו תקין.");
+            }
+            return ProductDAL.GetActiveProductIdsUsingIngredient(userId, ingredientId);
         }
         public static Product GetActiveProductForUser(int userId, int productId)
         {

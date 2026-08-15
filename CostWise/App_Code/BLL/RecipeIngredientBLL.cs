@@ -46,7 +46,7 @@ namespace CostWise.App_Code.BLL
             {
                 throw new InvalidOperationException("יחידת האריזה של הרכיב אינה זמינה לעסק.");
             }
-            return availableUnits.FindAll(unit => string.Equals(unit.UnitFamily, packageUnit.UnitFamily, StringComparison.OrdinalIgnoreCase));
+            return availableUnits.FindAll(unit => UnitConversionBLL.AreCompatibleUnits(packageUnit, unit));
         }
         public static void CreateRecipeIngredient(int userId, int productId, int ingredientId, decimal quantity, int measurementUnitId, decimal? manualIngredientCostOverride = null)
         {
@@ -117,10 +117,7 @@ namespace CostWise.App_Code.BLL
             {
                 throw new InvalidOperationException("יחידת האריזה של הרכיב אינה זמינה לעסק.");
             }
-            if (!string.Equals(packageUnit.UnitFamily, recipeUnit.UnitFamily, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException("יחידת המידה במתכון אינה תואמת למשפחת יחידת האריזה של הרכיב.");
-            }
+            UnitConversionBLL.ValidateCompatibleUnits(packageUnit, recipeUnit);
             List<RecipeIngredient> existingRecipeIngredients = RecipeIngredientDAL.GetRecipeIngredientsForProduct(userId, productId);
             int sortOrder = 1;
             foreach (RecipeIngredient existingRecipeIngredient in existingRecipeIngredients)
@@ -215,10 +212,7 @@ namespace CostWise.App_Code.BLL
             {
                 throw new InvalidOperationException("יחידת האריזה של הרכיב אינה זמינה לעסק.");
             }
-            if (!string.Equals(packageUnit.UnitFamily, recipeUnit.UnitFamily, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new ArgumentException("יחידת המידה במתכון אינה תואמת למשפחת יחידת האריזה של הרכיב.");
-            }
+            UnitConversionBLL.ValidateCompatibleUnits(packageUnit, recipeUnit);
             bool updated = RecipeIngredientDAL.UpdateRecipeIngredient(userId, productId, recipeIngredientId, ingredientId, quantity, measurementUnitId, existingRecipeIngredient.SortOrder, manualIngredientCostOverride);
             if (!updated)
             {

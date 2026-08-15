@@ -343,6 +343,41 @@ namespace CostWise.App_Code.DAL
                 }
             }
         }
+        public static List<int> GetActiveProductIdsUsingIngredient(int userId, int ingredientId)
+        {
+            List<int> productIds = new List<int>();
+            const string query = @"SELECT DISTINCT
+                p.ProductId
+            FROM dbo.T_Users AS u
+            INNER JOIN dbo.T_Products AS p
+                ON p.BusinessId = u.BusinessId
+            INNER JOIN dbo.T_RecipeIngredients AS ri
+                ON ri.ProductId = p.ProductId
+            INNER JOIN dbo.T_Ingredients AS i
+                ON i.BusinessId = u.BusinessId
+                AND i.IngredientId = ri.IngredientId
+            WHERE u.UserId = @UserId
+                AND i.IngredientId = @IngredientId
+                AND p.IsActive = 1
+            ORDER BY p.ProductId;";
+            using (SqlConnection connection = DatabaseHelper.GetConnection())
+            {
+                using (SqlCommand command = new SqlCommand(query, connection))
+                {
+                    command.Parameters.Add("@UserId", SqlDbType.Int).Value = userId;
+                    command.Parameters.Add("@IngredientId", SqlDbType.Int).Value = ingredientId;
+                    connection.Open();
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            productIds.Add(reader.GetInt32(reader.GetOrdinal("ProductId")));
+                        }
+                    }
+                }
+            }
+            return productIds;
+        }
         public static bool DeactivateProduct(int userId, int productId)
         {
             const string query = @"UPDATE p

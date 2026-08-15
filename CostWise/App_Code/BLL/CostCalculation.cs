@@ -12,6 +12,9 @@ namespace CostWise.App_Code.BLL
         public string YieldUnitLabelSnapshot { get; set; }
         public decimal TotalIngredientCostSnapshot { get; set; }
         public decimal CostPerYieldUnitSnapshot { get; set; }
+        public decimal VatRatePercentSnapshot { get; set; }
+        public decimal TotalCostIncludingVat { get { return TotalIngredientCostSnapshot * (1m + VatRatePercentSnapshot / 100m); } }
+        public decimal CostPerYieldUnitIncludingVat { get { return CostPerYieldUnitSnapshot * (1m + VatRatePercentSnapshot / 100m); } }
         public DateTime CalculatedAtUtc { get; set; }
         public DateTime? ValidUntilUtc { get; set; }
     }

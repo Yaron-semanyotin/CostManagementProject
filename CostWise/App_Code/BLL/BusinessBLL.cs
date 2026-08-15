@@ -77,6 +77,45 @@ namespace CostWise.App_Code.BLL
                 throw new InvalidOperationException("לא ניתן לעדכן את העסק עבור המשתמש הנוכחי.");
             }
         }
+        public static void UpdateBusinessSettings(int userId, bool showYieldUnitSelection, int? defaultRecipeMeasurementUnitId, decimal vatRatePercent)
+        {
+            if (userId <= 0)
+            {
+                throw new ArgumentException("זהות המשתמש אינה תקינה.");
+            }
+            if (vatRatePercent < 0 || vatRatePercent > 100)
+            {
+                throw new ArgumentException("שיעור המע״מ חייב להיות בין 0 ל־100.");
+            }
+            if (decimal.Round(vatRatePercent, 2) != vatRatePercent)
+            {
+                throw new ArgumentException("שיעור המע״מ יכול להכיל עד שתי ספרות אחרי הנקודה.");
+            }
+            if (defaultRecipeMeasurementUnitId.HasValue)
+            {
+                int measurementUnitId = defaultRecipeMeasurementUnitId.Value;
+                if (measurementUnitId <= 0)
+                {
+                    throw new ArgumentException("יחידת ברירת המחדל למתכון אינה תקינה.");
+                }
+                bool unitIsAvailable = MeasurementUnitBLL.GetAvailableUnits(userId).Exists(unit => unit.MeasurementUnitId == measurementUnitId);
+                if (!unitIsAvailable)
+                {
+                    throw new ArgumentException("יחידת ברירת המחדל אינה זמינה לעסק.");
+                }
+            }
+            Business currentBusiness = GetBusinessForUser(userId);
+            bool vatRateChanged = currentBusiness.VatRatePercent != vatRatePercent;
+            bool wasUpdated = BusinessDAL.UpdateBusinessSettings(userId, showYieldUnitSelection, defaultRecipeMeasurementUnitId, vatRatePercent);
+            if (!wasUpdated)
+            {
+                throw new InvalidOperationException("לא ניתן לעדכן את הגדרות העסק.");
+            }
+            if (vatRateChanged)
+            {
+                CostCalculationBLL.RecalculateAndSaveActiveProductCosts(userId);
+            }
+        }
         public static void UpdateBusinessLogoPath(int userId, string logoPath)
         {
             if (userId <= 0)
