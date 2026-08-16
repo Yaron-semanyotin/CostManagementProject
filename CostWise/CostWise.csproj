@@ -119,11 +119,13 @@
     <Content Include="MeasurementUnits.aspx" />
     <Content Include="ProductRecycleBin.aspx" />
     <Content Include="Register.aspx" />
+    <Content Include="Scripts\app-layout.js" />
     <Content Include="Scripts\calculation-history-chart.js" />
     <Content Include="Scripts\login.js" />
     <Content Include="Scripts\product-builder.js" />
     <Content Include="Scripts\product-instructions-editor.js" />
     <Content Include="Scripts\product-recipe-details.js" />
+    <Content Include="Scripts\theme.js" />
     <Content Include="Web.config" />
     <Content Include="Products.aspx" />
   </ItemGroup>

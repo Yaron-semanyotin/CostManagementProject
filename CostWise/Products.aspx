@@ -59,7 +59,7 @@
                 </div>
 
                 <div class="mt-4">
-                    <button id="ToggleInstructionsButton" type="button" class="btn btn-outline-primary"
+                    <button id="ToggleInstructionsButton" type="button" class="cw-action cw-action-primary"
                         aria-controls="InstructionsEditorPanel" aria-expanded="false">
                         הוסף הוראות הכנה
                     </button>
@@ -159,7 +159,7 @@
                                 </div>
 
                                 <div class="col-12 col-lg-1 d-flex align-items-end">
-                                    <button type="button" class="btn btn-outline-danger w-100" data-role="remove-row" disabled>
+                                    <button type="button" class="cw-action cw-action-danger w-100" data-role="remove-row" disabled>
                                         הסר
                                     </button>
                                 </div>
@@ -219,13 +219,22 @@
 
                             <asp:TemplateField HeaderText="מתכון">
                                 <ItemTemplate>
-                                    <asp:LinkButton ID="OpenRecipeButton" runat="server" Text="פתח מתכון" CssClass="btn btn-outline-primary btn-sm"
+                                    <asp:LinkButton ID="OpenRecipeButton" runat="server" Text="פתח מתכון" CssClass="cw-action cw-action-primary"
                                         CommandName="OpenRecipe" CommandArgument='<%# Eval("ProductId") %>' CausesValidation="false" data-role="open-recipe"
                                         data-product-id='<%# Eval("ProductId") %>' aria-expanded="false" aria-controls="ProductRecipeDetailsPanel" />
                                 </ItemTemplate>
                             </asp:TemplateField>
-                            <asp:CommandField HeaderText="פעולות" ShowEditButton="true" ShowDeleteButton="true"
-                                EditText="ערוך" DeleteText="מחק" />
+                            <asp:TemplateField HeaderText="פעולות">
+                                <ItemTemplate>
+                                    <span class="cw-table-actions">
+                                        <asp:LinkButton ID="EditProductButton" runat="server" Text="ערוך"
+                                            CommandName="Edit" CssClass="cw-action cw-action-primary" CausesValidation="false" />
+                                        <asp:LinkButton ID="DeleteProductButton" runat="server" Text="מחק"
+                                            CommandName="Delete" CssClass="cw-action cw-action-danger" CausesValidation="false"
+                                            OnClientClick="return confirm('האם להעביר את המוצר לסל המחזור?');" />
+                                    </span>
+                                </ItemTemplate>
+                            </asp:TemplateField>
                         </Columns>
                     </asp:GridView>
                 </div>

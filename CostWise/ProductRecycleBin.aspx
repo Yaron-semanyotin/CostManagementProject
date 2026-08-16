@@ -57,9 +57,9 @@
                         DataKeyNames="ProductId"
                         OnRowCommand="ProductRecycleBinGrid_RowCommand">
 
-                        <headerstyle cssclass="table-light" />
+                        <HeaderStyle CssClass="table-light" />
 
-                        <columns>
+                        <Columns>
                             <asp:BoundField
                                 DataField="ProductName"
                                 HeaderText="שם המוצר" />
@@ -74,11 +74,10 @@
                                 DataField="YieldUnitLabel"
                                 HeaderText="יחידת תוצר" />
 
-                            <asp:ButtonField
-                                Text="שחזר מוצר"
-                                CommandName="RestoreProduct"
-                                HeaderText="פעולות" />
-                        </columns>
+                            <asp:ButtonField Text="שחזר מוצר" CommandName="RestoreProduct" HeaderText="פעולות">
+                                <ControlStyle CssClass="cw-action cw-action-primary" />
+                            </asp:ButtonField>
+                        </Columns>
                     </asp:GridView>
                 </div>
             </div>

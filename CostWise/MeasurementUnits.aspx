@@ -128,7 +128,26 @@
 
                             <asp:BoundField DataField="ConversionFactorToBase" HeaderText="מקדם המרה ליחידת בסיס" DataFormatString="{0:0.##}" HtmlEncode="false" />
 
-                            <asp:CommandField ShowEditButton="true" ShowDeleteButton="true" EditText="ערוך" UpdateText="שמור" CancelText="ביטול" DeleteText="מחק" />
+                            <asp:TemplateField HeaderText="פעולות">
+                                <ItemTemplate>
+                                    <span class="cw-table-actions">
+                                        <asp:LinkButton ID="EditUnitButton" runat="server" Text="ערוך"
+                                            CommandName="Edit" CssClass="cw-action cw-action-primary" CausesValidation="false" />
+                                        <asp:LinkButton ID="DeleteUnitButton" runat="server" Text="מחק"
+                                            CommandName="Delete" CssClass="cw-action cw-action-danger" CausesValidation="false"
+                                            OnClientClick="return confirm('האם למחוק את יחידת המידה?');" />
+                                    </span>
+                                </ItemTemplate>
+
+                                <EditItemTemplate>
+                                    <span class="cw-table-actions">
+                                        <asp:LinkButton ID="UpdateUnitButton" runat="server" Text="שמור"
+                                            CommandName="Update" CssClass="cw-action cw-action-primary" CausesValidation="false" />
+                                        <asp:LinkButton ID="CancelUnitButton" runat="server" Text="ביטול"
+                                            CommandName="Cancel" CssClass="cw-action cw-action-secondary" CausesValidation="false" />
+                                    </span>
+                                </EditItemTemplate>
+                            </asp:TemplateField>
                         </Columns>
                     </asp:GridView>
                 </div>
@@ -238,7 +257,7 @@
             var customUnitsGrid =
                 document.getElementById(
                 '<%= CustomUnitsGrid.ClientID %>'
-            );
+                );
 
             if (customUnitsGrid) {
                 customUnitsGrid.addEventListener("click", function (event) {

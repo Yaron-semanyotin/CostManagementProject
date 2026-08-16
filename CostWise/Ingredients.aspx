@@ -100,8 +100,26 @@
                             </asp:TemplateField>
 
 
-                            <asp:CommandField ShowEditButton="true" ShowDeleteButton="true" EditText="ערוך"
-                                UpdateText="שמור" CancelText="ביטול" DeleteText="מחק" />
+                            <asp:TemplateField HeaderText="פעולות">
+                                <ItemTemplate>
+                                    <span class="cw-table-actions">
+                                        <asp:LinkButton ID="EditIngredientButton" runat="server" Text="ערוך"
+                                            CommandName="Edit" CssClass="cw-action cw-action-primary" CausesValidation="false" />
+                                        <asp:LinkButton ID="DeleteIngredientButton" runat="server" Text="מחק"
+                                            CommandName="Delete" CssClass="cw-action cw-action-danger" CausesValidation="false"
+                                            OnClientClick="return confirm('האם להעביר את הרכיב לסל המחזור?');" />
+                                    </span>
+                                </ItemTemplate>
+
+                                <EditItemTemplate>
+                                    <span class="cw-table-actions">
+                                        <asp:LinkButton ID="UpdateIngredientButton" runat="server" Text="שמור"
+                                            CommandName="Update" CssClass="cw-action cw-action-primary" CausesValidation="false" />
+                                        <asp:LinkButton ID="CancelIngredientButton" runat="server" Text="ביטול"
+                                            CommandName="Cancel" CssClass="cw-action cw-action-secondary" CausesValidation="false" />
+                                    </span>
+                                </EditItemTemplate>
+                            </asp:TemplateField>
                         </Columns>
                     </asp:GridView>
                 </div>

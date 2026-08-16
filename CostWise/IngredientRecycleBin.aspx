@@ -35,7 +35,9 @@
 
                             <asp:BoundField DataField="PackageUnitName" HeaderText="יחידת האריזה" />
 
-                            <asp:ButtonField Text="שחזור רכיב" CommandName="RestoreIngredient" HeaderText="פעולות" />
+                            <asp:ButtonField Text="שחזור רכיב" CommandName="RestoreIngredient" HeaderText="פעולות">
+                                <ControlStyle CssClass="cw-action cw-action-primary" />
+                            </asp:ButtonField>
                         </Columns>
                     </asp:GridView>
                 </div>

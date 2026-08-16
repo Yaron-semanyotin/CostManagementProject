@@ -9,8 +9,8 @@
                     <asp:Image ID="BusinessLogoImage" runat="server" Width="64" Height="64" CssClass="rounded-circle object-fit-cover border" AlternateText="לוגו העסק" Visible="false" />
 
                     <asp:Panel ID="BusinessLogoFallbackPanel" runat="server" CssClass="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold"
-                        Style="width: 64px; height: 64px;" role="img" aria-label="לוגו ברירת מחדל של CostWise">
-                        CW
+                        Style="width: 64px; height: 64px;" role="img" aria-label="לוגו ברירת מחדל של CoTamhirostWise">
+                        T
                     </asp:Panel>
 
                     <div>

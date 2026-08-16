@@ -1,7 +1,4 @@
-﻿<%@ Master Language="C#"
-    AutoEventWireup="true"
-    CodeFile="Site.Master.cs"
-    Inherits="CostWise.Site" %>
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="Site.Master.cs" Inherits="CostWise.Site" %>
 
 <!DOCTYPE html>
 
@@ -9,83 +6,94 @@
 <head runat="server">
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title><%: Page.Title %> - Tamhiro</title>
 
-    <title><%: Page.Title %> - CostWise</title>
+    <script src="<%: ResolveUrl("~/Scripts/theme.js") %>"></script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.rtl.min.css"
         integrity="sha384-CfCrinSRH2IR6a4e6fy2q6ioOX7O6Mtm1L9vRvFZ1trBncWmMePhzvafv7oIcWiW" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="<%: ResolveUrl("~/Content/Site.css") %>" />
     <asp:ContentPlaceHolder ID="HeadContent" runat="server" />
 </head>
-<body class="bg-light">
+<body class="app-body">
     <form id="MainForm" runat="server" enctype="multipart/form-data">
-        <header class="navbar navbar-dark bg-dark shadow-sm app-header">
+        <header class="navbar navbar-dark app-header">
             <div class="container-fluid">
                 <div class="d-flex align-items-center gap-3">
-                    <asp:Image ID="TopBusinessLogoImage" runat="server" Width="42" Height="42" CssClass="rounded-circle object-fit-cover border" AlternateText="לוגו העסק" Visible="false" />
+                    <asp:Image ID="TopBusinessLogoImage" runat="server" Width="42" Height="42"
+                        CssClass="rounded-circle object-fit-cover border app-business-logo"
+                        AlternateText="לוגו העסק" Visible="false" />
 
-                    <asp:Panel ID="TopBusinessLogoFallbackPanel" runat="server" CssClass="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold"
-                        Style="width: 42px; height: 42px;" role="img" aria-label="לוגו ברירת מחדל של CostWise">
-                        CW
+                    <asp:Panel ID="TopBusinessLogoFallbackPanel" runat="server"
+                        CssClass="d-inline-flex align-items-center justify-content-center rounded-circle fw-bold app-business-logo-fallback"
+                        role="img" aria-label="לוגו ברירת מחדל של Tamhiro">
+                        T
                     </asp:Panel>
+
                     <div>
-                        <asp:Label ID="BusinessNameLabel" runat="server" CssClass="d-block text-white fw-semibold" />
-                        <h1 class="h5 mb-0 text-white"><%: Page.Title %></h1>
+                        <span class="d-block text-white fw-semibold">Tamhiro</span>
+                        <asp:Label ID="BusinessNameLabel" runat="server"
+                            CssClass="d-block text-white-50 small app-header-business-name" />
                     </div>
                 </div>
+
                 <asp:Button ID="LogoutButton" runat="server" Text="יציאה"
-                    CssClass="btn btn-outline-light" CausesValidation="false" UseSubmitBehavior="false" OnClick="LogoutButton_Click" />
+                    CssClass="btn btn-outline-light btn-sm" CausesValidation="false"
+                    UseSubmitBehavior="false" OnClick="LogoutButton_Click"
+                    aria-label="יציאה מהמערכת" />
             </div>
         </header>
+
         <div class="container-fluid app-layout">
             <div class="row app-layout-row">
-                <aside class="col-12 col-md-3 col-lg-2 bg-white border-end p-3 app-sidebar">
+                <aside class="col-12 col-md-3 col-lg-2 p-3 app-sidebar">
                     <nav aria-label="ניווט ראשי">
                         <ul class="nav nav-pills flex-column gap-1">
                             <li class="nav-item">
-                                <a
-                                    class='<%= GetNavigationLinkCssClass("~/Dashboard.aspx") %>'
-                                    href='<%: ResolveUrl("~/Dashboard.aspx") %>'>לוח בקרה
+                                <a class='<%= GetNavigationLinkCssClass("~/Dashboard.aspx") %> d-flex align-items-center gap-2'
+                                    href='<%: ResolveUrl("~/Dashboard.aspx") %>'>
+                                    <i class="bi bi-house-door app-nav-icon" aria-hidden="true"></i>
+                                    <span>דף בית</span>
                                 </a>
                             </li>
 
                             <li class="nav-item">
-                                <a
-                                    class='<%= GetNavigationLinkCssClass("~/MeasurementUnits.aspx") %>'
-                                    href='<%: ResolveUrl("~/MeasurementUnits.aspx") %>'>יחידות מידה
+                                <a class='<%= GetNavigationLinkCssClass("~/MeasurementUnits.aspx") %> d-flex align-items-center gap-2'
+                                    href='<%: ResolveUrl("~/MeasurementUnits.aspx") %>'>
+                                    <i class="bi bi-rulers app-nav-icon" aria-hidden="true"></i>
+                                    <span>יחידות מידה</span>
                                 </a>
                             </li>
 
                             <li class="nav-item">
-                                <button
-                                    type="button"
+                                <button type="button"
                                     class='<%= IsIngredientsSectionCurrent()
-            ? "nav-link rounded px-3 py-2 w-100 border-0 d-flex align-items-center justify-content-between text-start active fw-semibold"
-            : "nav-link rounded px-3 py-2 w-100 border-0 bg-transparent d-flex align-items-center justify-content-between text-start text-dark" %>'
+                                        ? "nav-link rounded px-3 py-2 w-100 border-0 d-flex align-items-center text-start active fw-semibold"
+                                        : "nav-link rounded px-3 py-2 w-100 border-0 bg-transparent d-flex align-items-center text-start text-dark" %>'
                                     data-bs-toggle="collapse" data-bs-target="#ingredientsSubmenu"
-                                    aria-expanded='<%= IsIngredientsSectionCurrent()? "true": "false" %>' aria-controls="ingredientsSubmenu">
-
+                                    aria-expanded='<%= IsIngredientsSectionCurrent() ? "true" : "false" %>'
+                                    aria-controls="ingredientsSubmenu">
+                                    <i class="bi bi-basket app-nav-icon" aria-hidden="true"></i>
                                     <span>רכיבים</span>
-
-                                    <span aria-hidden="true">▾
-                                    </span>
+                                    <i class="bi bi-chevron-down app-nav-chevron" aria-hidden="true"></i>
                                 </button>
 
-                                <div
-                                    id="ingredientsSubmenu"
-                                    class='<%= IsIngredientsSectionCurrent()? "collapse show": "collapse" %>'>
+                                <div id="ingredientsSubmenu"
+                                    class='<%= IsIngredientsSectionCurrent() ? "collapse show" : "collapse" %>'>
                                     <ul class="nav flex-column gap-1 mt-1 me-3">
                                         <li class="nav-item">
-                                            <a
-                                                class='<%= GetNavigationLinkCssClass("~/Ingredients.aspx") %>'
-                                                href='<%: ResolveUrl("~/Ingredients.aspx") %>'>רשימת רכיבים
+                                            <a class='<%= GetNavigationLinkCssClass("~/Ingredients.aspx") %> d-flex align-items-center gap-2'
+                                                href='<%: ResolveUrl("~/Ingredients.aspx") %>'>
+                                                <i class="bi bi-list-ul app-nav-icon" aria-hidden="true"></i>
+                                                <span>רשימת רכיבים</span>
                                             </a>
                                         </li>
-
                                         <li class="nav-item">
-                                            <a
-                                                class='<%= GetNavigationLinkCssClass("~/IngredientRecycleBin.aspx") %>'
-                                                href='<%: ResolveUrl("~/IngredientRecycleBin.aspx") %>'>סל מחזור רכיבים
+                                            <a class='<%= GetNavigationLinkCssClass("~/IngredientRecycleBin.aspx") %> d-flex align-items-center gap-2'
+                                                href='<%: ResolveUrl("~/IngredientRecycleBin.aspx") %>'>
+                                                <i class="bi bi-trash3 app-nav-icon" aria-hidden="true"></i>
+                                                <span>סל מחזור רכיבים</span>
                                             </a>
                                         </li>
                                     </ul>
@@ -93,33 +101,33 @@
                             </li>
 
                             <li class="nav-item">
-                                <button type="button" class='<%= IsProductsSectionCurrent()
-            ? "nav-link rounded px-3 py-2 w-100 border-0 d-flex align-items-center justify-content-between text-start active fw-semibold"
-            : "nav-link rounded px-3 py-2 w-100 border-0 bg-transparent d-flex align-items-center justify-content-between text-start text-dark" %>'
+                                <button type="button"
+                                    class='<%= IsProductsSectionCurrent()
+                                        ? "nav-link rounded px-3 py-2 w-100 border-0 d-flex align-items-center text-start active fw-semibold"
+                                        : "nav-link rounded px-3 py-2 w-100 border-0 bg-transparent d-flex align-items-center text-start text-dark" %>'
                                     data-bs-toggle="collapse" data-bs-target="#productsSubmenu"
-                                    aria-expanded='<%= IsProductsSectionCurrent()? "true": "false" %>' aria-controls="productsSubmenu">
-
+                                    aria-expanded='<%= IsProductsSectionCurrent() ? "true" : "false" %>'
+                                    aria-controls="productsSubmenu">
+                                    <i class="bi bi-box-seam app-nav-icon" aria-hidden="true"></i>
                                     <span>מוצרים</span>
-
-                                    <span aria-hidden="true">▾</span>
+                                    <i class="bi bi-chevron-down app-nav-chevron" aria-hidden="true"></i>
                                 </button>
 
-                                <div
-                                    id="productsSubmenu"
-                                    class='<%= IsProductsSectionCurrent()? "collapse show": "collapse" %>'>
-
+                                <div id="productsSubmenu"
+                                    class='<%= IsProductsSectionCurrent() ? "collapse show" : "collapse" %>'>
                                     <ul class="nav flex-column gap-1 mt-1 me-3">
                                         <li class="nav-item">
-                                            <a
-                                                class='<%= GetNavigationLinkCssClass("~/Products.aspx") %>'
-                                                href='<%: ResolveUrl("~/Products.aspx") %>'>רשימת מוצרים
+                                            <a class='<%= GetNavigationLinkCssClass("~/Products.aspx") %> d-flex align-items-center gap-2'
+                                                href='<%: ResolveUrl("~/Products.aspx") %>'>
+                                                <i class="bi bi-list-ul app-nav-icon" aria-hidden="true"></i>
+                                                <span>רשימת מוצרים</span>
                                             </a>
                                         </li>
-
                                         <li class="nav-item">
-                                            <a
-                                                class='<%= GetNavigationLinkCssClass("~/ProductRecycleBin.aspx") %>'
-                                                href='<%: ResolveUrl("~/ProductRecycleBin.aspx") %>'>סל מחזור מוצרים
+                                            <a class='<%= GetNavigationLinkCssClass("~/ProductRecycleBin.aspx") %> d-flex align-items-center gap-2'
+                                                href='<%: ResolveUrl("~/ProductRecycleBin.aspx") %>'>
+                                                <i class="bi bi-trash3 app-nav-icon" aria-hidden="true"></i>
+                                                <span>סל מחזור מוצרים</span>
                                             </a>
                                         </li>
                                     </ul>
@@ -127,28 +135,44 @@
                             </li>
 
                             <li class="nav-item">
-                                <a
-                                    class='<%= GetNavigationLinkCssClass("~/CalculationHistory.aspx") %>'
-                                    href='<%: ResolveUrl("~/CalculationHistory.aspx") %>'>היסטוריית חישובים
+                                <a class='<%= GetNavigationLinkCssClass("~/CalculationHistory.aspx") %> d-flex align-items-center gap-2'
+                                    href='<%: ResolveUrl("~/CalculationHistory.aspx") %>'>
+                                    <i class="bi bi-clock-history app-nav-icon" aria-hidden="true"></i>
+                                    <span>היסטוריית חישובים</span>
                                 </a>
                             </li>
 
                             <li class="nav-item">
-                                <a
-                                    class='<%= GetNavigationLinkCssClass("~/BusinessProfile.aspx") %>'
-                                    href='<%: ResolveUrl("~/BusinessProfile.aspx") %>'>פרופיל העסק
+                                <a class='<%= GetNavigationLinkCssClass("~/BusinessProfile.aspx") %> d-flex align-items-center gap-2'
+                                    href='<%: ResolveUrl("~/BusinessProfile.aspx") %>'>
+                                    <i class="bi bi-building app-nav-icon" aria-hidden="true"></i>
+                                    <span>פרופיל העסק</span>
                                 </a>
                             </li>
                         </ul>
                     </nav>
                 </aside>
 
-                <main class="col-12 col-md-9 col-lg-10 py-4 px-4 app-content">
-                    <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+                <main class="col-12 col-md-9 col-lg-10 app-content">
+                    <div class="app-content-inner">
+                        <asp:ContentPlaceHolder ID="MainContent" runat="server" />
+                    </div>
                 </main>
             </div>
         </div>
+
+        <div class="form-check form-switch m-0 app-theme-switch">
+            <input type="checkbox" id="ThemeToggleButton" class="form-check-input app-theme-switch-input"
+                role="switch" aria-label="הפעל מצב כהה" title="הפעל מצב כהה" />
+            <label class="form-check-label app-theme-switch-label" for="ThemeToggleButton">
+                <i id="ThemeToggleIcon" class="bi bi-moon-stars" aria-hidden="true"></i>
+            </label>
+        </div>
     </form>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+        crossorigin="anonymous"></script>
+    <script src="<%: ResolveUrl("~/Scripts/app-layout.js") %>"></script>
 </body>
 </html>

@@ -95,8 +95,12 @@
                                             <td><%#: FormatHistoryPeriod(Eval("CalculatedAtUtc"),Eval("ValidUntilUtc")) %></td>
                                             <td>
                                                 <asp:LinkButton ID="OpenCalculationDetailsButton" runat="server"
-                                                    Text="הצג פרטים" CssClass="btn btn-sm btn-outline-primary" CommandArgument='<%# Eval("CostCalculationId") %>'
-                                                    CausesValidation="false" OnCommand="OpenCalculationDetailsButton_Command" />
+                                                    Text='<%# GetCalculationDetailsButtonText(Eval("CostCalculationId")) %>'
+                                                    CssClass="cw-action cw-action-primary"
+                                                    CommandArgument='<%# Eval("CostCalculationId") %>'
+                                                    CausesValidation="false"
+                                                    aria-expanded='<%# IsCalculationDetailsOpen(Eval("CostCalculationId")) ? "true" : "false" %>'
+                                                    OnCommand="OpenCalculationDetailsButton_Command" />
                                             </td>
                                         </tr>
                                         <asp:Repeater ID="InlineCalculationDetailsRepeater" runat="server"

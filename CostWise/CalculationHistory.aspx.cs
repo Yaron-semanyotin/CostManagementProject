@@ -377,6 +377,20 @@ namespace CostWise
             string endDate = validUntilUtc.ToString("dd/MM/yyyy");
             return "מתאריך " + startDate + " עד " + endDate;
         }
+        protected bool IsCalculationDetailsOpen(object costCalculationIdValue)
+        {
+            int costCalculationId;
+
+            return int.TryParse(Convert.ToString(costCalculationIdValue), out costCalculationId)
+                && SelectedCostCalculationId == costCalculationId;
+        }
+
+        protected string GetCalculationDetailsButtonText(object costCalculationIdValue)
+        {
+            return IsCalculationDetailsOpen(costCalculationIdValue)
+                ? "סגור פרטים"
+                : "הצג פרטים";
+        }
         protected List<CostCalculationResult> GetInlineCalculationDetails(object costCalculationIdValue)
         {
             int costCalculationId;

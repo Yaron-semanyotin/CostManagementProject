@@ -2,27 +2,25 @@
     "use strict";
 
     document.addEventListener("DOMContentLoaded", function () {
-        var toggleButton =
-            document.getElementById("ToggleInstructionsButton");
+        var toggleButton = document.getElementById("ToggleInstructionsButton");
+        var panel = document.getElementById("InstructionsEditorPanel");
+        var textBox = document.getElementById("InstructionsHtmlTextBox");
 
-        var instructionsPanel =
-            document.getElementById("InstructionsEditorPanel");
-
-        var instructionsTextBox =
-            document.getElementById("InstructionsHtmlTextBox");
-
-        if (!toggleButton || !instructionsPanel || !instructionsTextBox) {
+        if (!toggleButton || !panel || !textBox) {
             return;
         }
 
+        function isDarkTheme() {
+            return document.documentElement.getAttribute("data-bs-theme") === "dark";
+        }
+
         function initializeEditor() {
-            if (typeof tinymce === "undefined") {
+            if (typeof tinymce === "undefined"
+                || tinymce.get("InstructionsHtmlTextBox")) {
                 return;
             }
 
-            if (tinymce.get("InstructionsHtmlTextBox")) {
-                return;
-            }
+            var darkTheme = isDarkTheme();
 
             tinymce.init({
                 selector: "#InstructionsHtmlTextBox",
@@ -30,14 +28,14 @@
                 height: 320,
                 menubar: false,
                 directionality: "rtl",
+                skin: darkTheme ? "oxide-dark" : "oxide",
+                content_css: darkTheme ? "dark" : "default",
                 plugins: "lists",
                 toolbar: "undo redo | blocks | bold italic | bullist numlist | removeformat",
                 block_formats: "פסקה=p; כותרת=h3; כותרת משנה=h4",
                 valid_elements: "p,br,strong/b,em/i,ul,ol,li,h3,h4,blockquote",
                 xss_sanitization: true,
-                content_style:
-                    "body { direction: rtl; text-align: right; font-family: Arial, sans-serif; }",
-
+                content_style: "body { direction: rtl; text-align: right; font-family: system-ui, sans-serif; }",
                 setup: function (editor) {
                     editor.on("change input undo redo", function () {
                         editor.save();
@@ -47,48 +45,62 @@
         }
 
         function getClosedButtonText() {
-            if (instructionsTextBox.value.trim().length > 0) {
-                return "הצג הוראות הכנה";
-            }
-
-            return "הוסף הוראות הכנה";
+            return textBox.value.trim().length > 0
+                ? "הצג הוראות הכנה"
+                : "הוסף הוראות הכנה";
         }
 
-        function openInstructionsEditor() {
-            instructionsPanel.hidden = false;
+        function openEditor() {
+            panel.hidden = false;
             toggleButton.textContent = "מזער הוראות הכנה";
             toggleButton.setAttribute("aria-expanded", "true");
-
             initializeEditor();
         }
 
-        function closeInstructionsEditor() {
-            if (typeof tinymce !== "undefined") {
-                var editor = tinymce.get("InstructionsHtmlTextBox");
+        function closeEditor() {
+            var editor = typeof tinymce !== "undefined"
+                ? tinymce.get("InstructionsHtmlTextBox")
+                : null;
 
-                if (editor) {
-                    editor.save();
-                }
+            if (editor) {
+                editor.save();
             }
 
-            instructionsPanel.hidden = true;
+            panel.hidden = true;
             toggleButton.textContent = getClosedButtonText();
             toggleButton.setAttribute("aria-expanded", "false");
         }
 
-        toggleButton.addEventListener("click", function () {
-            if (instructionsPanel.hidden) {
-                openInstructionsEditor();
+        function reloadEditorTheme() {
+            if (typeof tinymce === "undefined" || panel.hidden) {
                 return;
             }
 
-            closeInstructionsEditor();
+            var editor = tinymce.get("InstructionsHtmlTextBox");
+
+            if (editor) {
+                editor.save();
+                editor.remove();
+            }
+
+            initializeEditor();
+        }
+
+        toggleButton.addEventListener("click", function () {
+            if (panel.hidden) {
+                openEditor();
+            }
+            else {
+                closeEditor();
+            }
         });
+
+        document.addEventListener("costwise:themechange", reloadEditorTheme);
 
         toggleButton.textContent = getClosedButtonText();
 
-        if (instructionsTextBox.value.trim().length > 0) {
-            openInstructionsEditor();
+        if (textBox.value.trim().length > 0) {
+            openEditor();
         }
     });
-}());
+})();

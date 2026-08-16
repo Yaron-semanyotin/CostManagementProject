@@ -1,359 +1,297 @@
 ﻿(function () {
     "use strict";
 
+    var charts = [];
+
     function formatCurrency(value) {
-        return Number(value).toLocaleString(
-            "he-IL",
-            {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            })
-            + " ₪";
+        return Number(value).toLocaleString("he-IL", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }) + " ₪";
     }
 
     function formatPercentage(value) {
-        return Math.abs(Number(value)).toLocaleString(
-            "he-IL",
-            {
-                minimumFractionDigits: 1,
-                maximumFractionDigits: 1
-            })
-            + "%";
+        return Math.abs(Number(value)).toLocaleString("he-IL", {
+            minimumFractionDigits: 1,
+            maximumFractionDigits: 1
+        }) + "%";
     }
 
-    function updatePointComparison(
-        chartSection,
-        chartPoints,
-        selectedPointIndexes) {
+    function getCssVariable(name, fallback) {
+        var value = window.getComputedStyle(document.documentElement)
+            .getPropertyValue(name).trim();
 
-        var comparisonText =
-            chartSection.querySelector(
-                ".product-cost-point-comparison-text");
+        return value || fallback;
+    }
 
-        var comparisonResult =
-            chartSection.querySelector(
-                ".product-cost-point-comparison-result");
+    function getThemeColors() {
+        return {
+            primary: getCssVariable("--cw-primary", "#2563EB"),
+            warning: getCssVariable("--cw-warning", "#B45309"),
+            border: getCssVariable("--cw-border", "#E2E8F0"),
+            text: getCssVariable("--cw-text-primary", "#0F172A"),
+            secondary: getCssVariable("--cw-text-secondary", "#64748B"),
+            surface: getCssVariable("--cw-surface", "#FFFFFF")
+        };
+    }
 
-        if (!comparisonText || !comparisonResult) {
+    function updatePointComparison(section, points, selectedIndexes) {
+        var text = section.querySelector(".product-cost-point-comparison-text");
+        var result = section.querySelector(".product-cost-point-comparison-result");
+
+        if (!text || !result) {
             return;
         }
 
-        comparisonResult.classList.remove(
-            "text-danger",
-            "text-success",
-            "text-secondary");
+        result.classList.remove("text-danger", "text-success", "text-secondary");
 
-        if (selectedPointIndexes.length === 1) {
-            var selectedPoint =
-                chartPoints[selectedPointIndexes[0]];
+        if (selectedIndexes.length === 1) {
+            var selected = points[selectedIndexes[0]];
 
-            comparisonText.textContent =
-                "נבחרה נקודה: "
-                + selectedPoint.label
-                + " — "
-                + formatCurrency(selectedPoint.value)
-                + ". בחר נקודה נוספת.";
-
-            comparisonResult.textContent = "";
+            text.textContent = "נבחרה נקודה: " + selected.label + " — "
+                + formatCurrency(selected.value) + ". בחר נקודה נוספת.";
+            result.textContent = "";
             return;
         }
 
-        var orderedIndexes =
-            selectedPointIndexes
-                .slice()
-                .sort(function (firstIndex, secondIndex) {
-                    return firstIndex - secondIndex;
-                });
+        var indexes = selectedIndexes.slice().sort(function (first, second) {
+            return first - second;
+        });
 
-        var startPoint = chartPoints[orderedIndexes[0]];
-        var endPoint = chartPoints[orderedIndexes[1]];
+        var startPoint = points[indexes[0]];
+        var endPoint = points[indexes[1]];
         var startValue = Number(startPoint.value);
         var endValue = Number(endPoint.value);
 
-        comparisonText.textContent =
-            "מ־"
-            + startPoint.label
-            + " ("
-            + formatCurrency(startValue)
-            + ") עד "
-            + endPoint.label
-            + " ("
-            + formatCurrency(endValue)
-            + "):";
+        text.textContent = "מ־" + startPoint.label + " (" + formatCurrency(startValue)
+            + ") עד " + endPoint.label + " (" + formatCurrency(endValue) + "):";
 
         if (startValue === 0) {
-            comparisonResult.textContent =
-                "לא ניתן לחשב אחוז מעלות התחלתית של 0";
-
-            comparisonResult.classList.add(
-                "text-secondary");
-
+            result.textContent = "לא ניתן לחשב אחוז מעלות התחלתית של 0";
+            result.classList.add("text-secondary");
             return;
         }
 
-        var changePercentage =
-            (endValue - startValue)
-            / startValue
-            * 100;
+        var percentage = (endValue - startValue) / startValue * 100;
 
-        if (changePercentage > 0) {
-            comparisonResult.textContent =
-                "↑ " + formatPercentage(changePercentage);
-
-            comparisonResult.classList.add("text-danger");
+        if (percentage > 0) {
+            result.textContent = "↑ " + formatPercentage(percentage) + " עלייה בעלות";
+            result.classList.add("text-danger");
             return;
         }
 
-        if (changePercentage < 0) {
-            comparisonResult.textContent =
-                "↓ " + formatPercentage(changePercentage);
-
-            comparisonResult.classList.add("text-success");
+        if (percentage < 0) {
+            result.textContent = "↓ " + formatPercentage(percentage) + " ירידה בעלות";
+            result.classList.add("text-success");
             return;
         }
 
-        comparisonResult.textContent = "ללא שינוי 0.0%";
-        comparisonResult.classList.add("text-secondary");
+        result.textContent = "ללא שינוי 0.0%";
+        result.classList.add("text-secondary");
+    }
+
+    function applyChartTheme(chart) {
+        var colors = getThemeColors();
+        var dataset = chart.data.datasets[0];
+        var values = chart.$costWiseValues;
+        var selectedIndexes = chart.$costWiseSelectedIndexes;
+
+        dataset.borderColor = colors.primary;
+        dataset.backgroundColor = colors.primary;
+
+        dataset.pointRadius = values.map(function (value, index) {
+            return selectedIndexes.indexOf(index) >= 0 ? 7 : 3;
+        });
+
+        dataset.pointBackgroundColor = values.map(function (value, index) {
+            return selectedIndexes.indexOf(index) >= 0
+                ? colors.warning
+                : colors.primary;
+        });
+
+        dataset.pointBorderColor = values.map(function (value, index) {
+            return selectedIndexes.indexOf(index) >= 0
+                ? colors.surface
+                : colors.primary;
+        });
+
+        chart.options.scales.x.grid.color = colors.border;
+        chart.options.scales.y.grid.color = colors.border;
+        chart.options.scales.x.ticks.color = colors.secondary;
+        chart.options.scales.y.ticks.color = colors.secondary;
+        chart.options.scales.x.title.color = colors.secondary;
+        chart.options.scales.y.title.color = colors.secondary;
+        chart.options.plugins.tooltip.backgroundColor = colors.surface;
+        chart.options.plugins.tooltip.titleColor = colors.text;
+        chart.options.plugins.tooltip.bodyColor = colors.text;
+        chart.options.plugins.tooltip.borderColor = colors.border;
+        chart.update("none");
     }
 
     function createProductCostChart(canvas) {
-        if (!canvas
-            || canvas.dataset.chartInitialized === "true"
+        if (!canvas || canvas.dataset.chartInitialized === "true"
             || typeof Chart === "undefined") {
             return;
         }
 
-        var chartSection = canvas.closest("section");
+        var section = canvas.closest("section");
+        var input = section
+            ? section.querySelector(".product-cost-chart-data")
+            : null;
 
-        if (!chartSection) {
+        if (!section || !input) {
             return;
         }
 
-        var dataInput = chartSection.querySelector(
-            ".product-cost-chart-data");
-
-        if (!dataInput) {
-            return;
-        }
-
-        var chartPoints;
+        var points;
 
         try {
-            chartPoints = JSON.parse(dataInput.value);
+            points = JSON.parse(input.value);
         }
         catch (error) {
             return;
         }
 
-        if (!Array.isArray(chartPoints)
-            || chartPoints.length === 0) {
+        if (!Array.isArray(points) || points.length === 0) {
             return;
         }
 
-        var labels = chartPoints.map(function (point) {
+        var labels = points.map(function (point) {
             return String(point.label);
         });
 
-        var values = chartPoints.map(function (point) {
+        var values = points.map(function (point) {
             return Number(point.value);
         });
 
-        var productName =
-            canvas.getAttribute("data-product-name")
-            || "מוצר";
+        var productName = canvas.getAttribute("data-product-name") || "מוצר";
+        var colors = getThemeColors();
+        var selectedIndexes = [];
 
-        var rootStyles =
-            window.getComputedStyle(
-                document.documentElement);
-
-        var primaryColor =
-            rootStyles
-                .getPropertyValue("--bs-primary")
-                .trim()
-            || "#0d6efd";
-
-        var selectionColor =
-            rootStyles
-                .getPropertyValue("--bs-warning")
-                .trim()
-            || "#ffc107";
-
-        var selectedPointIndexes = [];
-
-        new Chart(
-            canvas,
-            {
-                type: "line",
-
-                data: {
-                    labels: labels,
-
-                    datasets: [
-                        {
-                            label:
-                                "עלות כוללת - "
-                                + productName,
-
-                            data: values,
-                            borderColor: primaryColor,
-                            backgroundColor: primaryColor,
-                            borderWidth: 2,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            pointHitRadius: 12,
-                            tension: 0.2,
-                            fill: false
-                        }
-                    ]
+        var chart = new Chart(canvas, {
+            type: "line",
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "עלות כוללת - " + productName,
+                    data: values,
+                    borderColor: colors.primary,
+                    backgroundColor: colors.primary,
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointHoverRadius: 6,
+                    pointHitRadius: 12,
+                    tension: 0,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                locale: "he-IL",
+                interaction: {
+                    mode: "index",
+                    intersect: false
                 },
+                onClick: function (event, activeElements, currentChart) {
+                    if (!activeElements || activeElements.length === 0) {
+                        return;
+                    }
 
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    locale: "he-IL",
+                    var index = activeElements[0].index;
 
-                    interaction: {
-                        mode: "index",
-                        intersect: true
+                    if (selectedIndexes.length === 2) {
+                        selectedIndexes.length = 0;
+                    }
+
+                    if (selectedIndexes.length === 1 && selectedIndexes[0] === index) {
+                        return;
+                    }
+
+                    selectedIndexes.push(index);
+                    applyChartTheme(currentChart);
+                    updatePointComparison(section, points, selectedIndexes);
+                },
+                plugins: {
+                    legend: {
+                        display: false
                     },
-
-                    onClick: function (event, activeElements, chart) {
-                        if (!activeElements
-                            || activeElements.length === 0) {
-                            return;
-                        }
-
-                        var clickedPointIndex =
-                            activeElements[0].index;
-
-                        if (selectedPointIndexes.length === 2) {
-                            selectedPointIndexes = [];
-                        }
-
-                        if (selectedPointIndexes.length === 1
-                            && selectedPointIndexes[0]
-                            === clickedPointIndex) {
-                            return;
-                        }
-
-                        selectedPointIndexes.push(clickedPointIndex);
-
-                        var dataset = chart.data.datasets[0];
-
-                        dataset.pointRadius =
-                            values.map(function (value, index) {
-                                return selectedPointIndexes
-                                    .indexOf(index) >= 0
-                                    ? 8
-                                    : 4;
-                            });
-
-                        dataset.pointBackgroundColor =
-                            values.map(function (value, index) {
-                                return selectedPointIndexes
-                                    .indexOf(index) >= 0
-                                    ? selectionColor
-                                    : primaryColor;
-                            });
-
-                        dataset.pointBorderColor =
-                            values.map(function (value, index) {
-                                return selectedPointIndexes
-                                    .indexOf(index) >= 0
-                                    ? "#212529"
-                                    : primaryColor;
-                            });
-
-                        dataset.pointBorderWidth =
-                            values.map(function (value, index) {
-                                return selectedPointIndexes
-                                    .indexOf(index) >= 0
-                                    ? 2
-                                    : 1;
-                            });
-
-                        chart.update();
-
-                        updatePointComparison(
-                            chartSection,
-                            chartPoints,
-                            selectedPointIndexes);
-                    },
-
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-
-                        tooltip: {
-                            rtl: true,
-                            textDirection: "rtl",
-
-                            callbacks: {
-                                label: function (context) {
-                                    return "עלות כוללת: "
-                                        + formatCurrency(
-                                            context.parsed.y);
-                                }
-                            }
-                        }
-                    },
-
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: "מועד החישוב"
-                            }
-                        },
-
-                        y: {
-                            beginAtZero: true,
-
-                            title: {
-                                display: true,
-                                text: "עלות כוללת (₪)"
+                    tooltip: {
+                        rtl: true,
+                        textDirection: "rtl",
+                        borderWidth: 1,
+                        callbacks: {
+                            title: function (items) {
+                                return items.length > 0 ? items[0].label : "";
                             },
-
-                            ticks: {
-                                callback: function (value) {
-                                    return formatCurrency(value);
-                                }
+                            label: function (context) {
+                                return "עלות כוללת: " + formatCurrency(context.parsed.y);
                             }
                         }
                     }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: colors.border
+                        },
+                        ticks: {
+                            color: colors.secondary
+                        },
+                        title: {
+                            display: true,
+                            text: "מועד החישוב",
+                            color: colors.secondary
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: colors.border
+                        },
+                        ticks: {
+                            color: colors.secondary,
+                            callback: function (value) {
+                                return formatCurrency(value);
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: "עלות כוללת (₪)",
+                            color: colors.secondary
+                        }
+                    }
                 }
-            });
+            }
+        });
 
+        chart.$costWiseValues = values;
+        chart.$costWiseSelectedIndexes = selectedIndexes;
+        charts.push(chart);
         canvas.dataset.chartInitialized = "true";
+        applyChartTheme(chart);
     }
 
     function initializeChartsInside(container) {
-        var canvases =
-            container.querySelectorAll(
-                ".product-cost-history-chart");
-
-        canvases.forEach(function (canvas) {
-            createProductCostChart(canvas);
-        });
+        container.querySelectorAll(".product-cost-history-chart")
+            .forEach(function (canvas) {
+                createProductCostChart(canvas);
+            });
     }
 
-    document.addEventListener(
-        "DOMContentLoaded",
-        function () {
-            var openProductGroups =
-                document.querySelectorAll(
-                    ".collapse.show");
-
-            openProductGroups.forEach(
-                function (group) {
-                    initializeChartsInside(group);
-                });
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".collapse.show").forEach(function (group) {
+            initializeChartsInside(group);
         });
+    });
 
-    document.addEventListener(
-        "shown.bs.collapse",
-        function (event) {
-            initializeChartsInside(event.target);
+    document.addEventListener("shown.bs.collapse", function (event) {
+        initializeChartsInside(event.target);
+    });
+
+    document.addEventListener("costwise:themechange", function () {
+        charts.forEach(function (chart) {
+            applyChartTheme(chart);
         });
+    });
 })();
