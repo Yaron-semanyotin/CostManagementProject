@@ -4,3 +4,6 @@ obj/
 packages/
 *.user
 *.suo
+**/Properties/PublishProfiles/
+*.PublishSettings
+*.pubxml
